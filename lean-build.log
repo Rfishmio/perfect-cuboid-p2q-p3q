@@ -1,0 +1,63 @@
+⚠ [1989/2020] Replayed P3Core
+warning: P3Core.lean:20:19: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: P3Core.lean:99:43: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: P3Core.lean:100:12: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: P3Core.lean:110:20: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: P3Core.lean:114:41: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: P3Core.lean:206:41: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: P3Core.lean:292:41: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: P3Core.lean:384:47: Try `simp at hN` instead of `simpa using hN`
+
+Note: This linter can be disabled with `set_option linter.unnecessarySimpa false`
+⚠ [1990/2020] Replayed P3Parity
+warning: P3Parity.lean:13:12: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: P3Parity.lean:18:12: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: P3Parity.lean:120:74: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: P3Parity.lean:122:73: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+⚠ [1991/2020] Replayed P3Dispatch
+warning: P3Dispatch.lean:134:32: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: P3Dispatch.lean:138:28: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice
+
+Note: This linter can be disabled with `set_option linter.unnecessarySeqFocus false`
+warning: P3Dispatch.lean:226:63: Local variable 'c' resembles constructor 'FormalCuboid.P3.Leg.c' - write '.c' (with a dot) or 'FormalCuboid.P3.Leg.c' to use the constructor.
+
+Note: This linter can be disabled with `set_option linter.constructorNameAsVariable false`
+warning: P3Dispatch.lean:261:16: Local variable 'c' resembles constructor 'FormalCuboid.P3.Leg.c' - write '.c' (with a dot) or 'FormalCuboid.P3.Leg.c' to use the constructor.
+
+Note: This linter can be disabled with `set_option linter.constructorNameAsVariable false`
+warning: P3Dispatch.lean:355:5: Local variable 'c' resembles constructor 'FormalCuboid.P3.Leg.c' - write '.c' (with a dot) or 'FormalCuboid.P3.Leg.c' to use the constructor.
+
+Note: This linter can be disabled with `set_option linter.constructorNameAsVariable false`
+warning: P3Dispatch.lean:421:70: Local variable 'c' resembles constructor 'FormalCuboid.P3.Leg.c' - write '.c' (with a dot) or 'FormalCuboid.P3.Leg.c' to use the constructor.
+
+Note: This linter can be disabled with `set_option linter.constructorNameAsVariable false`
+warning: P3Dispatch.lean:441:66: Local variable 'c' resembles constructor 'FormalCuboid.P3.Leg.c' - write '.c' (with a dot) or 'FormalCuboid.P3.Leg.c' to use the constructor.
+
+Note: This linter can be disabled with `set_option linter.constructorNameAsVariable false`
+✔ [2018/2020] Built LowerDiagonal (19s)
+✔ [2019/2020] Built CuboidTheorems (16s)
+Build completed successfully (2020 jobs).

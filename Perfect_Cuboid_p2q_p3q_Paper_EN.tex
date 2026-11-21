@@ -1,0 +1,652 @@
+% Compile twice with XeLaTeX, or build with Tectonic.
+\documentclass[11pt,a4paper,twoside]{article}
+\usepackage[a4paper,inner=28mm,outer=28mm,top=27mm,bottom=26mm,headheight=15pt,headsep=5mm]{geometry}
+\usepackage{fontspec}
+\usepackage{amsmath,amssymb,booktabs}
+\setmainfont{Times New Roman}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+\usepackage[unicode,hidelinks,pdfdisplaydoctitle]{hyperref}
+\hypersetup{pdftitle={Excluding p²q and p³q as body diagonals of perfect cuboids},pdfauthor={GPT6.2, Liu Tairan, Liu Yingxi, Zhu Yucheng, Zhang Lishuo, Kong Weisen},pdfsubject={Diophantine equations and Lean formalization}}
+
+\setlength{\parindent}{1.45em}
+\setlength{\parskip}{0pt}
+\setlength{\emergencystretch}{1.5em}
+\setlength{\abovedisplayskip}{9pt plus 2pt minus 3pt}
+\setlength{\belowdisplayskip}{9pt plus 2pt minus 3pt}
+\setlength{\abovedisplayshortskip}{4pt plus 2pt}
+\setlength{\belowdisplayshortskip}{6pt plus 2pt minus 2pt}
+\linespread{1.12}
+\raggedbottom
+\allowdisplaybreaks[2]
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=5000
+\numberwithin{equation}{section}
+
+\newcommand{\paperauthors}{\shortstack[c]{Author: GPT6.2\\[.25em]Co-authors: Liu Tairan, Liu Yingxi, Zhu Yucheng, Zhang Lishuo, Kong Weisen}}
+\newcommand{\paperaffiliation}{}
+\newcommand{\paperrunningtitle}{Body diagonals of perfect cuboids}
+\newcommand{\paperstatus}{Preprint\enspace·\enspace 21 November 2026}
+\newcommand{\proofof}{Proof of Theorem~\ref{thm:main}}
+\newcommand{\proseheadingstop}{.}
+\newcommand{\theorembodyfont}{\itshape}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\providecommand{\proofname}{Proof}
+
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{\z@}%
+  {-2.7ex \@plus -.65ex \@minus -.2ex}{1.05ex \@plus .15ex}%
+  {\normalfont\large\bfseries}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+  {-2.15ex \@plus -.55ex \@minus -.2ex}{.72ex \@plus .12ex}%
+  {\normalfont\normalsize\bfseries}}
+\def\@begintheorem#1#2{%
+  \trivlist\item[\hskip\labelsep\bfseries #1~#2\proseheadingstop]%
+  \theorembodyfont}
+\def\@opargbegintheorem#1#2#3{%
+  \trivlist\item[\hskip\labelsep\bfseries #1~#2\enspace (#3)\proseheadingstop]%
+  \theorembodyfont}
+\newenvironment{proof}[1][\proofname]{%
+  \par\addvspace{.65\baselineskip}\noindent
+  \textit{#1}\proseheadingstop\enspace\ignorespaces
+}{%
+  \unskip\nobreak\hfill\nobreak\(\square\)\par
+  \addvspace{.65\baselineskip}
+}
+\newcommand{\journalheadingbox}[2]{%
+  \vbox{\hb@xt@\textwidth{\normalfont\small #1\hfil #2}%
+    \vskip 3pt\hrule height .35pt}}
+\def\ps@journal{%
+  \def\@oddhead{\journalheadingbox{\paperrunningtitle}{\thepage}}%
+  \def\@evenhead{\journalheadingbox{\thepage}{\paperrunningtitle}}%
+  \let\@oddfoot\@empty\let\@evenfoot\@empty}
+\renewcommand{\maketitle}{%
+  \thispagestyle{plain}%
+  \begin{center}
+    {\LARGE\bfseries\@title\par}
+    \ifx\paperauthors\@empty\else
+      \vspace{.8em}{\large\paperauthors\par}
+    \fi
+    \ifx\paperaffiliation\@empty\else
+      \vspace{.2em}{\small\paperaffiliation\par}
+    \fi
+    \vspace{.65em}{\small\paperstatus\par}
+  \end{center}
+  \vspace{.45em}
+}
+\makeatother
+
+\newenvironment{paperabstract}{%
+  \begin{list}{}{\setlength{\leftmargin}{6mm}\setlength{\rightmargin}{6mm}%
+    \setlength{\topsep}{0pt}\setlength{\parsep}{0pt}}%
+  \item\normalsize\ignorespaces
+}{\end{list}\vspace{.45em}}
+\newcommand{\frontfield}[2]{\par\noindent\textbf{#1}\enspace #2}
+\renewcommand{\refname}{References}
+\renewcommand{\tablename}{Table}
+\pagestyle{journal}
+
+\begin{document}
+\title{Excluding \(p^2q\) and \(p^3q\) as body diagonals\\of perfect cuboids}
+% Supply the verified affiliation information here for submission.
+% \renewcommand{\paperaffiliation}{}
+\maketitle
+\begin{paperabstract}
+\frontfield{Abstract}{Let \(p\) and \(q\) be distinct primes. We prove that neither \(p^2q\) nor \(p^3q\) can be the body diagonal of a perfect cuboid. In a primitive perfect cuboid, the two even edges and their face diagonal are even legs of right triangles with the same hypotenuse. These three lengths also satisfy a Pythagorean relation. Unique factorization of Gaussian integers gives seven signed candidate expressions for \(p^2q\) and ten for \(p^3q\). Divisibility by conjugate Gaussian prime powers, valuation arguments, and discriminants rule out every candidate triple satisfying the primitivity constraints. The lower-exponent exclusions and a scaling argument extend the result to general perfect cuboids. Both theorems were formalized in Lean~4 with Mathlib and verified by a fresh kernel replay.}
+\smallskip
+\frontfield{2020 Mathematics Subject Classification}{Primary 11D09. Secondary 11D72.}
+\frontfield{Key words}{Perfect cuboid, Gaussian integers, body diagonal, Lean 4.}
+\end{paperabstract}
+
+\section{Introduction}
+\label{sec:introduction}
+
+A \emph{perfect cuboid} is a rectangular box whose three edges, three face diagonals, and body diagonal all have positive integer lengths. For edges \(a,b,c\), face diagonals \(d_{ab},d_{ac},d_{bc}\), and body diagonal \(g\), the defining equations are
+\begin{equation}
+\label{eq:cuboid}
+\begin{aligned}
+d_{ab}^2&=a^2+b^2, & d_{ac}^2&=a^2+c^2,\\
+d_{bc}^2&=b^2+c^2, & g^2&=a^2+b^2+c^2.
+\end{aligned}
+\end{equation}
+A perfect cuboid is \emph{primitive} if \(\gcd(a,b,c)=1\). Korec \cite[Lemma 2.1]{ref1} proved that every prime divisor of the body diagonal of a primitive perfect cuboid is congruent to \(1\) modulo \(4\). His Theorem 5.1 excludes prime powers and products of two primes as body diagonals.
+
+Aletheia, Neo.K, and Xuán Héng~\cite{ref2} analyzed \(p^2q\) using a common-hypotenuse classification. Their seven candidate expressions yield 105 relations with a designated hypotenuse. Conjugation of the Gaussian prime above \(q\) gives 57 orbits of these relations. Their preprint excludes 35 orbits and leaves 22 open. A separate AMRAL working note~\cite{ref3} presents another quotient of the classification and discusses a prior claim of a complete \(p^2q\) exclusion catalogued by ProofAtlas~\cite{ref4}. The ProofAtlas record calls for a review of the coprimality and square-divisibility arguments. The underlying argument and its authorship could not be verified from these records. Using the common-hypotenuse framework and Gaussian integer factorization, we prove the following.
+
+\begin{theorem}\label{thm:main}
+Let \(p\) and \(q\) be distinct primes. The body diagonal of a perfect cuboid cannot equal \(p^2q\) or \(p^3q\).
+\end{theorem}
+
+Sections~\ref{sec:common-hypotenuse} and~\ref{sec:gaussian-comparison} develop the common-hypotenuse reduction and the comparison of Gaussian prime powers. Section~\ref{sec:lower-diagonals} reproves the lower-exponent exclusions used in the scaling argument. Sections~\ref{sec:p2q} and~\ref{sec:p3q} treat the two primitive cases. Section~\ref{sec:general} proves Theorem~\ref{thm:main} for arbitrary positive integral edge lengths, and Section~\ref{sec:lean} describes the Lean verification.
+
+\section{Common-hypotenuse reduction and candidate expressions}
+\label{sec:common-hypotenuse}
+
+\begin{lemma}[Common hypotenuse and prime divisors]
+\label{lem:common-hypotenuse}
+Suppose that a primitive perfect cuboid exists. After permuting its edges, we may take \(a\) odd and \(b,c\) even. Put \(d=d_{bc}\). Then \(b,c,d\) are pairwise distinct positive even integers with \(b^2+c^2=d^2\), and
+\[
+b^2+d_{ac}^2=c^2+d_{ab}^2=d^2+a^2=g^2.
+\]
+The body diagonal \(g\) is odd. Every prime divisor \(\ell\) of \(g\) satisfies \(\ell\equiv1\pmod 4\), and at least two of \(b,c,d\) are coprime to \(\ell\).
+\end{lemma}
+
+\begin{proof}
+Primitivity gives at least one odd edge. Two odd edges would give a face diagonal whose square is \(2\) modulo \(4\), so there is exactly one odd edge. The defining square identities show that \(d\) is even and that \(d_{ab},d_{ac},g\) are odd. We have \(d>\max(b,c)\). If \(b=c\), the identity \(d^2=2b^2\) equates an even \(2\)-adic valuation with an odd one. Here and below, \(v_\ell(n)\) denotes the exponent of the prime \(\ell\) in a nonzero integer \(n\).
+
+Suppose that a prime \(\ell\mid g\) satisfies \(\ell\equiv3\pmod 4\). As \(-1\) is a nonsquare modulo \(\ell\), both terms in each of the three displayed sums of squares must be divisible by \(\ell\) before squaring. In particular \(\ell\mid a,b,c\), contrary to primitivity. Since \(g\) is odd, all its prime divisors are \(1\) modulo \(4\). If a prime \(\ell\mid g\) divides two of \(b,c,d\), the relation \(b^2+c^2=d^2\) forces it to divide the third. The identity \(g^2=d^2+a^2\) then gives \(\ell\mid a\), again contradicting primitivity.
+\end{proof}
+
+Write \(N(w)=w\bar w\) for the Gaussian norm. The ring \(\mathbb Z[i]\) is Euclidean with respect to \(N\). Rounding the real and imaginary parts of a Gaussian quotient to the nearest integers yields a remainder of strictly smaller norm. Thus \(\mathbb Z[i]\) is a unique factorization domain. If \(\ell\equiv1\pmod 4\) is prime, there exists \(t\) with \(t^2\equiv-1\pmod\ell\). For instance, take an element of order \(4\) in the cyclic group \(\mathbb F_\ell^\times\). The ring homomorphism \(\mathbb Z[i]\to\mathbb F_\ell\) sending \(i\) to \(-t\) shows that \(\gcd(\ell,t+i)\) is a nonunit. Since \(\ell\) itself does not divide \(t+i\), the norm of this greatest common divisor is \(\ell\). A Gaussian integer of prime norm is irreducible, hence prime in \(\mathbb Z[i]\). Choosing a suitable unit multiple gives \(\ell=\lambda\bar\lambda\), with \(\Re\lambda\) odd and \(\Im\lambda\) even.
+
+The Gaussian primes \(\lambda\) and \(\bar\lambda\) are nonassociate. Association by \(\pm1\) would make one coordinate zero and \(\ell\) an integer square. Association by \(\pm i\) would make the two coordinates equal in absolute value and \(\ell\) even. For \(n\ge1\), both coordinates of \(\lambda^n\) are nonzero, since otherwise \(\lambda^n=\pm\bar\lambda^n\), contrary to unique factorization. The coordinates are also coprime. Any common rational prime divisor would have its square dividing \(N(\lambda^n)=\ell^n\), so it would have to be \(\ell\). But \(\ell\mid\lambda^n\) in \(\mathbb Z[i]\) would imply \(\bar\lambda\mid\lambda^n\). Reduction of the norm identity modulo \(\ell\) now shows that \(\ell\) divides neither coordinate.
+
+The property of having odd real part and even imaginary part is preserved under multiplication and conjugation. Consequently \(\lambda^{2j}\) has odd real part and imaginary part divisible by \(4\). Both coordinates are nonzero and each has absolute value strictly less than \(\sqrt{N(\lambda^{2j})}=\ell^j\).
+
+\begin{lemma}[Candidate expressions]
+\label{lem:candidates}
+Suppose that \(g=p^kq\), where \(k\ge1\) and \(p,q\) are distinct primes congruent to \(1\) modulo \(4\). Choose Gaussian primes \(\pi,\rho\) with odd real part and even imaginary part, such that \(N(\pi)=p\) and \(N(\rho)=q\). Write \(R_j+iI_j=\pi^{2j}\) and \(U+iV=\rho^2\). Every positive even leg of a right triangle with hypotenuse \(g\) whose other leg is odd is the absolute value of one of
+\[
+A_j=p^{k-j}qI_j,\qquad B_j^\sigma=p^{k-j}(I_jU+\sigma R_jV),\qquad
+C=p^kV,
+\quad 1\le j\le k,\quad \sigma\in\{1,-1\}.
+\]
+For these expressions, \(v_p(A_j)=v_p(B_j^\sigma)=k-j\), \(p^k\mid C\), \(q\mid A_j\), and \(q\nmid B_j^\sigma C\). The three even lengths in Lemma~\ref{lem:common-hypotenuse} have distinct candidate labels, at least two of which lie in \(\{A_k,B_k^+,B_k^-\}\).
+\end{lemma}
+
+\begin{proof}
+Represent a right triangle with hypotenuse \(g\) by \(w=o+ie\), where \(o\) is the odd leg and \(e\) the even leg, so \(N(w)=g^2\). Unique factorization gives
+\[
+w=\epsilon\pi^{k+j}\bar\pi^{k-j}\rho^{1+t}\bar\rho^{1-t},
+\qquad -k\le j\le k,\qquad t\in\{-1,0,1\}.
+\]
+All factors displayed have odd real part and even imaginary part. Hence the unit \(\epsilon\) is either \(1\) or \(-1\). Conjugating \(w\) if needed makes \(j\ge0\) and preserves the absolute value of its imaginary part. The case \(j=t=0\) has zero imaginary part. When \(j>0\), the choice \(t=0\) gives \(A_j\), and \(t=\pm1\) gives \(B_j^\pm\). For \(j=0\) the remaining nonzero cases give \(C\).
+
+After extracting \(p^{k-j}\), the Gaussian representatives of \(A_j\) and \(B_j^\sigma\) contain \(\pi^{2j}\) and are not divisible by \(\bar\pi\). For such a representative \(z\), the conjugate \(\bar z\) is divisible by \(\bar\pi\). If \(p\mid\Im z\), then \(\bar\pi\mid z-\bar z=2i\Im z\), so \(\bar\pi\mid z\), a contradiction. This gives the stated \(p\)-adic valuations. The Gaussian representatives of \(B_j^\sigma\) and \(C\) can be conjugated if necessary so that they contain \(\rho^2\). The same argument with \(\bar\rho\) shows that neither expression is divisible by \(q\). The other divisibilities follow directly from the expressions. Since the three positive even lengths are distinct, any label can account for at most one of them. By Lemma~\ref{lem:common-hypotenuse}, at least two are not divisible by \(p\) and thus have labels in the stated set.
+\end{proof}
+
+\section{Comparisons via powers of Gaussian primes}
+\label{sec:gaussian-comparison}
+
+We retain the notation of Lemma~\ref{lem:candidates}. Congruences modulo powers of Gaussian primes are taken in \(\mathbb Z[i]\).
+
+Let \(\ell\equiv1\pmod 4\) be prime, let \(\lambda\) be a Gaussian prime of norm \(\ell\), and let \(n\ge1\). For \(b\in\mathbb Z\), we have
+\[
+\lambda^n\mid b\ \text{in }\mathbb Z[i]
+\quad\Longleftrightarrow\quad
+\ell^n\mid b\ \text{in }\mathbb Z.
+\]
+Indeed, conjugation of the first divisibility gives \(\bar\lambda^n\mid b\). The two coprime factors then have product \(\ell^n\) dividing \(b\) in \(\mathbb Z[i]\), and the real part of the quotient gives an integer quotient. The reverse implication follows from \(\ell^n=\lambda^n\bar\lambda^n\). Since \(\ell\) is odd, the identities
+\[
+z+\bar z=2\Re z,\qquad z-\bar z=2i\Im z
+\]
+show that \(\lambda^n\mid z+\bar z\) implies \(\ell^n\mid\Re z\), and that \(\lambda^n\mid z-\bar z\) implies \(\ell^n\mid\Im z\).
+
+Suppose that \(\lambda^n\) divides both \(\bar Z_1\) and \(\bar Z_2\). If
+\(\ell^n\mid(\Im Z_1)^2-\varepsilon(\Im Z_2)^2\) for \(\varepsilon\in\{1,-1\}\), then
+\[
+\lambda^n\mid Z_1^2-\varepsilon Z_2^2.
+\]
+This follows by multiplying the integer congruence by \((2i)^2\) and using \(Z_r\equiv2i\Im Z_r\pmod{\lambda^n}\) for \(r=1,2\). If \(Z_1,Z_2\) share a factor \(u\) with \(\lambda\nmid u\), we can cancel \(u^2\) in this divisibility because \(u\) is coprime to \(\lambda^n\).
+
+\subsection{Triples containing \texorpdfstring{\(A_k,B_k^\sigma\)}{A(k), B(k, sigma)} and a lower-index candidate}
+\label{subsec:gaussian-comparison}
+
+The comparison below applies for all \(k\ge1\). Recall that \(I_j=\Im(\pi^{2j})\), \(R_j=\Re(\pi^{2j})\), and \(U+iV=\rho^2\). The signed candidates are
+\[
+A_j=p^{k-j}qI_j,\qquad B_j^\sigma=p^{k-j}(I_jU+\sigma R_jV),\qquad
+C=p^kV,\qquad \sigma=\pm1.
+\]
+In all Pythagorean relations we use the squares of these candidates. If the third term is \(A_j\) with \(j<k\), both \(A_k,A_j\) are divisible by \(q\) while \(B_k^\sigma\) is nonzero modulo \(q\), which is impossible. For the remaining cases let \(H=B_k^\sigma\), and let the third term \(L\) be \(B_j^\tau\) with \(1\le j<k\), or \(C\) with \(j=0\).
+
+\paragraph{Comparison at \(p\).}
+Take \(1\le n\le 2(k-j)\). Since \(p^{k-j}\mid L\), the Pythagorean relation gives
+\[
+p^n\mid A_k^2-\varepsilon H^2,
+\]
+with \(\varepsilon=-1\) when \(L\) is the hypotenuse and \(\varepsilon=+1\) otherwise. Choose \(z=\rho\) or \(\bar\rho\) according to \(\sigma\). The expressions \(A_k,H\) are the imaginary parts of \(q\pi^{2k}\) and \(\pi^{2k}z^2\), respectively. Their conjugates are both divisible by \(\bar\pi^{2k}\), while \(\bar\pi\) divides neither \(\pi\) nor \(z\). Applying the congruence above with \(\lambda=\bar\pi\) and cancelling \(\pi^{4k}\) gives
+\[
+\bar\pi^n\mid q^2-\varepsilon z^4=z^2(\bar z^{\,2}-\varepsilon z^2).
+\]
+Cancelling \(z^2\) and applying the corresponding coordinate divisibility shows that \(p^n\) divides \(\Re(z^2)\) or \(\Im(z^2)\). Both are nonzero and their squares sum to \(q^2\), so \(p^n<q\).
+
+\paragraph{Comparison at \(q\).}
+Since \(q\mid A_k\), the relation gives \(q^2\mid H^2-\eta L^2\), where \(\eta=-1\) if \(A_k\) is the hypotenuse and \(\eta=+1\) if it is a leg. Conjugate the Gaussian representatives as needed so that both contain \(\rho^2\). Conjugation preserves the squares of the imaginary parts. Set \(c=\pi\) if \(\sigma=+1\) and \(c=\bar\pi\) if \(\sigma=-1\), and put
+\[
+\delta=
+\begin{cases}
+k-j,&\sigma=\tau,\\
+k+j,&\sigma\ne\tau,
+\end{cases}
+\qquad
+u=\rho^2c^{2k-\delta},
+\qquad x=c^\delta .
+\]
+When \(L=C\), take \(\delta=k\). If the signs agree, then \(u\bar x=\rho^2c^{k+j}\bar c^{k-j}=\rho^2p^{k-j}c^{2j}\). If the signs differ, then \(u\bar x=\rho^2p^{k-j}\bar c^{2j}\). When \(L=C\), we have \(u\bar x=\rho^2p^k\). Thus \(H^2,L^2\) are the squares of the imaginary parts of \(ux,u\bar x\), respectively. Both conjugates contain \(\bar\rho^2\), and \(\bar\rho\nmid u\). We obtain
+\[
+\bar\rho^2\mid x^2-\eta\bar x^{\,2}.
+\]
+It follows that \(q^2\) divides one coordinate of \(x^2\), the real coordinate when \(\eta=-1\). Since \(\delta>0\), both coordinates are nonzero, and \(N(x^2)=p^{2\delta}\) gives \(q^2<p^\delta\).
+
+For \(\eta=+1\) we have the stronger bound
+\[
+q^4<p^\delta.
+\]
+Indeed, \(\bar\rho^2\mid(x-\bar x)(x+\bar x)\). The prime \(\bar\rho\) cannot divide both factors, because it would then divide \(2x\). It divides neither \(2\), as \(q\nmid N(2)=4\), nor \(x\), as \(p\ne q\). Thus \(\bar\rho^2\) divides one of the two factors, and \(q^2\) divides \(\Re x\) or \(\Im x\). The square of that coordinate is at least \(q^4\), and the other coordinate is nonzero. Hence \(q^4<N(x)=p^\delta\).
+
+\section{Known exclusions for prime powers and products of two primes}
+\label{sec:lower-diagonals}
+
+We use the common-hypotenuse reduction to reprove the exclusions in Korec's Theorem~5.1 \cite{ref1}. Put \(x=b\), \(y=c\), and \(z=d\), with corresponding odd legs \(d_{ac},d_{ab},a\).
+
+\subsection{A prime power \texorpdfstring{\(g=p^k\)}{g = pᵏ}}
+
+Let \(k\ge1\). By Lemma~\ref{lem:common-hypotenuse}, \(p\equiv1\pmod 4\). Write \(p=\pi\bar\pi\), where the Gaussian prime \(\pi\) has odd real part and even imaginary part, and \(\pi,\bar\pi\) are coprime. For \(e\in\{x,y,z\}\) with corresponding odd leg \(o\), the Gaussian integer \(w=o+ie\) satisfies \(w\bar w=p^{2k}\). Unique factorization gives \(w=\varepsilon\pi^a\bar\pi^b\), where \(\varepsilon\) is a unit and \(a+b=2k\) by taking norms. If \(p\nmid e\), at least one of \(a,b\) is zero, since otherwise \(p=\pi\bar\pi\) divides both coordinates of \(w\).
+
+Products of Gaussian integers with odd real part and even imaginary part have the same parity pattern. Consequently \(\pi^{2k}\) and \(\bar\pi^{2k}\) both have odd real part and even imaginary part. The imaginary part of \(w\) is even, so \(\varepsilon=1\) or \(-1\). Conjugation only changes the sign of the imaginary part. Thus every positive even length not divisible by \(p\) equals \(\lvert\Im(\pi^{2k})\rvert\). By Lemma~\ref{lem:common-hypotenuse}, at least two distinct lengths take this value, a contradiction. If \(k=0\), then \(g=1\), whereas the sum of squares of three positive integer edges is at least \(3\).
+
+\subsection{A product \texorpdfstring{\(g=pq\)}{g = pq} of distinct primes}
+
+The product of two equal primes has already been excluded. Suppose that \(p\ne q\). By Lemma~\ref{lem:common-hypotenuse}, \(p,q\equiv1\pmod 4\). Write \(\pi=r+is\) and \(\rho=u+iv\), and let \(R+iS=\pi^2\) and \(U+iV=\rho^2\). By Section~\ref{sec:common-hypotenuse}, \(R,U\) are odd, \(S,V\) are nonzero and even, and
+\[
+R^2+S^2=p^2,\qquad U^2+V^2=q^2,\qquad
+\gcd(R,S)=\gcd(U,V)=1,\qquad q\nmid UV.
+\]
+The integers \(r-s,r+s\) are odd. Any common divisor divides \(2r,2s\) and therefore \(r,s\). Since \(\gcd(r,s)=1\), the integers \(r-s,r+s\) are coprime. For \(k=1\), Lemma~\ref{lem:candidates} gives four candidates,
+\[
+A=qS,\qquad B=pV,\qquad D=SU+RV,\qquad E=SU-RV.
+\]
+Interchanging \(p,q\) and their Gaussian primes interchanges \(A,B\), fixes \(D\), and changes \(E\) to \(-E\). Thus it suffices to exclude triples containing both \(A\) and \(B\), and the triple \(A,D,E\). See also \cite[Section~4]{ref2} for this common-hypotenuse setup.
+
+\paragraph{Triples containing \(A\) and \(B\).}
+The third value \(H\) is \(D\) or \(E\). Regard \(A,B,H\) as \(A_1,C,B_1^\sigma\) in Section~\ref{subsec:gaussian-comparison}. The comparison at \(p\) with \(n=2\) yields \(p^2<q\). The comparison at \(q\) with \(\delta=1\) gives \(q^2<p\). These bounds are incompatible.
+
+\paragraph{The triple \(A,D,E\).}
+If \(A^2=D^2+E^2\), expanding and using \(q^2=U^2+V^2\) gives
+\[
+S^2(V^2-U^2)=2R^2V^2.
+\]
+Since \(V^2-U^2\) and \(R\) are odd and \(S,V\) are nonzero, the \(2\)-adic valuations of the two sides are \(2v_2(S)\) and \(1+2v_2(V)\). These have opposite parity.
+
+If \(D\) or \(E\) is the hypotenuse, then \(D^2-E^2=\pm A^2\). As \(D^2-E^2=4RSUV\) and \(S\ne0\), we obtain
+\[
+q^2S=\pm4RUV.
+\]
+Since \(q\nmid4UV\), we have \(q^2\mid R\). Write \(R=q^2h\), so that \(S=\pm4UVh\). Coprimality of \(R,S\) implies \(\lvert h\rvert=1\). Hence \(\lvert(r-s)(r+s)\rvert=q^2\). The factors are coprime, so their absolute values are \(1\) and \(q^2\) in some order. It follows that
+\[
+\lvert S\rvert=\frac{\lvert(r+s)^2-(r-s)^2\rvert}{2}=\frac{q^4-1}{2}.
+\]
+On the other hand, \(2\lvert UV\rvert\le U^2+V^2=q^2\), so \(\lvert S\rvert=4\lvert UV\rvert\le2q^2\). As \(q\ge5\), we have \(q^4-1>4q^2\), giving a contradiction. This excludes body diagonal \(pq\) in the primitive case.
+
+\section{The primitive case with body diagonal \texorpdfstring{$p^2q$}{p2q}}
+\label{sec:p2q}
+
+\begin{proposition}
+\label{prop:p2q}
+For distinct primes \(p\) and \(q\), no primitive perfect cuboid has
+body diagonal \(p^2q\).
+\end{proposition}
+
+\begin{proof}
+
+Suppose that a primitive perfect cuboid has body diagonal \(g=p^2q\).
+By Lemma~\ref{lem:common-hypotenuse}, both \(p\) and \(q\) are congruent to \(1\) modulo \(4\).
+With \(\pi,\rho\) as in Section~\ref{sec:common-hypotenuse}, set
+\[
+R+iS=\pi^2,\qquad T+iW=\pi^4,\qquad U+iV=\rho^2,
+\qquad \rho=m+in.
+\]
+Thus
+\[
+\begin{gathered}
+T=R^2-S^2,\qquad W=2RS,\qquad U=m^2-n^2,\qquad V=2mn,\\
+R^2+S^2=p^2,\qquad T^2+W^2=p^4,\qquad U^2+V^2=q^2.
+\end{gathered}
+\]
+The components \(R,S,T,W,U,V\) are nonzero. The components \(R,T,U\)
+are odd and \(S,W,V\) are even. As shown in Section~\ref{sec:common-hypotenuse}, we have
+\(p\nmid RSTW\), \(q\nmid UV\), and
+\[
+\gcd(R,S)=\gcd(T,W)=\gcd(U,V)=\gcd(m,n)=1.
+\]
+The identity \(T=R^2-S^2\) also gives \(\gcd(R,T)=1\).
+
+\subsection{The seven representatives of even legs}
+
+For \(k=2\), label the expressions in Lemma~\ref{lem:candidates} by \(A,B,C,D,E,F,G\)
+as in Table~\ref{tab:p2q}. The pair \((j,t)\) records the two shifts in the Gaussian
+exponents.
+\begin{table}[htbp]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}cccc@{}}
+\toprule
+Label & \((j,t)\) & Signed even leg & Divisible by \(p\) \\
+\midrule
+\(A\) & \((1,0)\) & \(pqS\) & Yes \\
+\(B\) & \((2,0)\) & \(qW\) & No \\
+\(C\) & \((0,1)\) & \(p^2V\) & Yes \\
+\(D\) & \((1,1)\) & \(p(SU+RV)\) & Yes \\
+\(E\) & \((1,-1)\) & \(p(SU-RV)\) & Yes \\
+\(F\) & \((2,1)\) & \(WU+TV\) & No \\
+\(G\) & \((2,-1)\) & \(WU-TV\) & No \\
+\bottomrule
+\end{tabular}
+\caption{The seven signed even-leg representatives for \(g=p^2q\).}
+\label{tab:p2q}
+\end{table}
+By Lemma~\ref{lem:candidates}, at least two of the three distinct labels lie in
+\(\{B,F,G\}\). We therefore examine triples containing \(B\) and exactly
+one of \(F,G\), and triples containing both \(F\) and \(G\).
+
+\subsection{A triple containing \texorpdfstring{\(B\)}{B} and one of \texorpdfstring{\(F,G\)}{F,G}}
+
+Let the three labels be \(B,H,L\), where \(H\in\{F,G\}\) and
+\(L\in\{A,C,D,E\}\). If \(L=A\), then \(q\mid A,B\) and \(q\nmid H\).
+The Pythagorean equation has exactly one nonzero term modulo \(q\),
+which is impossible.
+
+For \(L\in\{C,D,E\}\), the associated index in Section~\ref{sec:gaussian-comparison} is \(j=0\)
+or \(1\). Identify \(B,H\) with \(A_2,B_2^\sigma\) in the notation of
+that section. The comparison at \(p\) with \(n=2\) gives \(p^2<q\).
+The comparison at \(q\) gives \(q^2<p^\delta\le p^3\), since
+\(1\le\delta\le3\). These inequalities are incompatible.
+
+\subsection{A triple containing both \texorpdfstring{\(F\)}{F} and \texorpdfstring{\(G\)}{G}}
+
+It remains to consider \(F,G,L\), where \(L\in\{A,B,C,D,E\}\).
+We use
+\[
+F^2-G^2=4WTUV,\qquad F^2+G^2=2W^2U^2+2T^2V^2.
+\]
+
+\smallskip
+\noindent\textit{Case 1. \(\lvert L\rvert\) is a leg.}
+Then \(F^2-G^2=\pm L^2\). We consider the following possibilities.
+
+\begin{itemize}
+\item \textit{\(L=A\).} Substituting \(W=2RS\) and cancelling \(S\)
+gives \(8RTUV=\pm p^2q^2S\). Since \(p\nmid8RT\) and \(q\nmid8UV\),
+we obtain \(p^2\mid UV\) and \(q^2\mid RT\). The equalities
+\(\gcd(U,V)=\gcd(R,T)=1\) force each prime power to divide a single
+factor of the corresponding product. As \(0<|U|,|V|<q\), we get
+\(p^2<q\). Similarly, \(0<|R|<p\) and \(0<|T|<p^2\) give
+\(q^2<p^2\), a contradiction.
+
+\item \textit{\(L=B\).} Cancelling \(W\) gives \(q^2W=\pm4TUV\).
+Because \(q\nmid4UV\), we can write \(T=q^2h\) and \(W=\pm4UVh\).
+The equality \(\gcd(T,W)=1\) gives \(|h|=1\). It follows that
+\(\lvert R-S\rvert\lvert R+S\rvert=q^2\). These two factors are odd
+and coprime, since any odd common divisor divides \(2R\) and \(2S\)
+and \(\gcd(R,S)=1\). Thus they are \(1\) and \(q^2\) in some order.
+The identity \((R+S)^2-(R-S)^2=4RS=2W\) gives
+\[
+|W|=\frac{q^4-1}{2}.
+\]
+On the other hand, \(|W|=4|UV|\le 2(U^2+V^2)=2q^2\).
+This is impossible for \(q\ge5\).
+
+\item \textit{\(L=C\).} Cancelling \(V\) gives \(p^4V=\pm4WTU\).
+Because \(p\nmid4WT\), we can write \(U=p^4h\) and \(V=\pm4WTh\).
+The equality \(\gcd(U,V)=1\) yields \(|h|=1\), so that
+\(\lvert m-n\rvert\lvert m+n\rvert=p^4\). The two factors are odd
+and coprime since \(\gcd(m,n)=1\). They are therefore \(1\) and \(p^4\)
+in some order. From \((m+n)^2-(m-n)^2=2V\) we get
+\[
+|V|=\frac{p^8-1}{2},
+\]
+which contradicts \(|V|=4|WT|\le2p^4\).
+
+\item \textit{\(L=D\) or \(L=E\).} For an appropriate choice of the two
+signs, we have \(p^2(SU\pm RV)^2=\pm4WTUV\). Set \(\alpha=v_2(S)\)
+and \(\beta=v_2(V)\). The right-hand side is nonzero and has
+\(2\)-adic valuation \(3+\alpha+\beta\), because \(W=2RS\) and
+\(R,T,U\) are odd. If \(\alpha\ne\beta\), the valuation of the left-hand
+side is \(2\min(\alpha,\beta)\), strictly less than \(3+\alpha+\beta\).
+If \(\alpha=\beta\), the valuation of the right-hand side is odd,
+whereas that of the nonzero square on the left is even.
+\end{itemize}
+
+\smallskip
+\noindent\textit{Case 2. \(\lvert L\rvert\) is the hypotenuse.}
+Then \(F^2+G^2=L^2\). For \(L=A\) or \(L=B\), eliminate \(U^2\) using
+\(U^2+V^2=q^2\) to obtain
+\[
+2(T^2-W^2)V^2=q^2
+\begin{cases}
+S^2(p^2-8R^2), & L=A,\\
+-W^2, & L=B.
+\end{cases}
+\]
+The left-hand side is nonzero and has odd \(2\)-adic valuation because
+\(T^2-W^2\) is odd. In both cases the right-hand side is an odd integer
+times a nonzero square, so its valuation is even. For \(L=C\), the
+equation becomes \(2W^2U^2=(p^4-2T^2)V^2\), which again equates two
+nonzero integers whose \(2\)-adic valuations have opposite parity.
+
+Finally, \(L=D\) and \(L=E\) both give
+\[
+2\bigl((WU)^2+(TV)^2\bigr)=p^2(SU\pm RV)^2.
+\]
+If \(v_2(W)\ne v_2(V)\), the left-hand side has odd valuation
+\(1+2\min(v_2(W),v_2(V))\), whereas the nonzero square on the
+right has even valuation. If \(v_2(W)=v_2(V)\), set \(\alpha=v_2(S)\).
+Then \(v_2(W)=v_2(V)=\alpha+1\). Factoring out \(2^{2\alpha+2}\)
+from the sum on the left leaves a sum of two odd squares, which is
+congruent to \(2\) modulo \(4\). The left-hand side thus has valuation
+\(2\alpha+4\). The two terms \(SU\) and \(RV\) have valuations
+\(\alpha\) and \(\alpha+1\), respectively, so the right-hand side
+has valuation \(2\alpha\). This is again impossible.
+
+The two families exhaust the possible triples of labels. This proves
+the primitive case for \(p^2q\).
+\end{proof}
+
+\section{Primitive cuboids with body diagonal \texorpdfstring{\(p^3q\)}{p³q}}
+\label{sec:p3q}
+
+\begin{proposition}\label{prop:p3q}
+Let \(p\) and \(q\) be distinct primes. There is no primitive perfect cuboid with body diagonal \(p^3q\).
+\end{proposition}
+
+\begin{proof}
+Suppose that a primitive perfect cuboid has body diagonal \(g=p^3q\). By Lemma~\ref{lem:common-hypotenuse}, \(p,q\equiv1\pmod4\). Retain the notation \(R,S,T,W,U,V\) of Section~\ref{sec:p2q} and set \(X+iY=\pi^6\). Then
+\[
+X=R(R^2-3S^2),\qquad Y=S(3R^2-S^2),\qquad X^2+Y^2=p^6.
+\]
+The integer \(X\) is odd and \(Y\) is divisible by \(4\). They are nonzero and coprime, and \(p\nmid XY\). Lemma~\ref{lem:candidates} with \(k=3\) gives ten signed candidates
+\[
+\begin{gathered}
+A_j=p^{3-j}qI_j,\qquad B_j^\sigma=p^{3-j}(I_jU+\sigma R_jV),\qquad C=p^3V,\\
+j=1,2,3,\qquad \sigma\in\{1,-1\},
+\end{gathered}
+\]
+where \(I_1=S\), \(I_2=W\), and \(I_3=Y\). At least two of the three distinct labels belong to \(\{A_3,B_3^+,B_3^-\}\).
+
+\subsection{Triples containing \texorpdfstring{\(A_3\)}{A₃} and one \texorpdfstring{\(B_3^\sigma\)}{B₃(σ)}}
+
+Write \(H=B_3^\sigma\) and let \(L\) be the remaining candidate. The next subsection treats \(L=B_3^{-\sigma}\). If \(L\in\{A_1,A_2\}\), then \(q\) divides both \(A_3\) and \(L\) and \(q\nmid H\), which contradicts the Pythagorean relation modulo \(q\). The remaining possibilities are \(L=B_j^\tau\) for \(j=1,2\), or \(L=C\) with \(j=0\).
+
+The comparison at \(p\) in Section~\ref{sec:gaussian-comparison} with \(n=2(3-j)\) gives \(p^{2(3-j)}<q\). The comparison at \(q\) gives \(q^2<p^\delta\) with \(\delta\le3+j\). If \(j=0,1\), these bounds imply \(p^4<q\) and \(q^2<p^4\), a contradiction. If \(j=2\), then \(p^2<q\) and \(\delta\in\{1,5\}\). Since \(q^2>p^4\), we must have \(\delta=5\) and \(\tau=-\sigma\).
+
+If \(A_3\) is a leg, the stronger bound in Section~\ref{sec:gaussian-comparison} gives \(q^4<p^5\), whereas \(p^2<q\) implies \(p^8<q^4\). This is impossible.
+
+If \(A_3\) is the hypotenuse, the comparison at \(q\) in Section~\ref{sec:gaussian-comparison} gives \(q^2\mid\operatorname{Re}(\pi^{10})\), since conjugation preserves the real part. Expanding gives
+\[
+\operatorname{Re}(\pi^{10})=R E,\qquad E=R^4-10R^2S^2+5S^4.
+\]
+As \(0<|R|<p<q\), it follows that \(q^2\mid E\). The identities
+\[
+\begin{aligned}
+E+5(R^2+S^2)^2&=6R^4+10S^4>0,\\
+5(R^2+S^2)^2-E&=4R^4+20R^2S^2>0
+\end{aligned}
+\]
+give \(|E|<5p^4<5q^2\). Since \(R,q\) are odd and \(4\mid S\), we have \(E\equiv q^2\equiv1\pmod8\). Thus \(E/q^2\) is an integer in \((-5,5)\) congruent to \(1\pmod8\), so \(E=q^2\). Reducing \(R^2+S^2=p^2\) modulo \(3\) shows that exactly one of \(R,S\) is divisible by \(3\). If \(3\mid R\), then \(E\equiv5S^4\equiv2\pmod3\), which contradicts \(E=q^2\). Hence \(3\mid S\) and \(3\nmid R\).
+
+Put \(r=v_3(S)\ge1\) and \(s=v_3(V)\). The identities \(Y=S(3R^2-S^2)\) and \(W=2RS\) give \(v_3(Y)=r+1\) and \(v_3(W)=r\), since \((3R^2-S^2)/3=R^2-3(S/3)^2\) is a unit modulo \(3\). Both \(X=R(R^2-3S^2)\) and \(T=R^2-S^2\) are units modulo \(3\). The required equation is
+\begin{equation}\label{eq:p3q-mixed}
+(YU+\sigma XV)^2+p^2(WU-\sigma TV)^2=q^2Y^2.
+\end{equation}
+If \(s\le r\), both legs are divisible by \(3^s\), and the first leg divided by \(3^s\) is nonzero modulo \(3\). The hypotenuse remains divisible by \(3\) after division by \(3^s\). Dividing \eqref{eq:p3q-mixed} by \(3^{2s}\) and reducing modulo \(3\) gives a sum of two squares equal to zero. Both squares must vanish modulo \(3\), a contradiction. If \(s>r\), then \(3\mid V\) and \(U^2+V^2=q^2\) gives \(3\nmid U\). The second leg now has valuation exactly \(r\), and the first leg and the hypotenuse are both divisible by \(3^{r+1}\). Dividing \eqref{eq:p3q-mixed} by \(3^{2r}\) and reducing modulo \(3\) again gives a contradiction.
+
+\subsection{Triples containing \texorpdfstring{\(B_3^+\)}{B₃⁺} and \texorpdfstring{\(B_3^-\)}{B₃⁻}}
+
+Set \(F=B_3^+=YU+XV\) and \(G=B_3^-=YU-XV\). Direct expansion gives
+\begin{equation}\label{eq:p3q-sum-difference}
+F^2-G^2=4XYUV,\qquad F^2+G^2=2(Y^2U^2+X^2V^2).
+\end{equation}
+Write \(L\) for the third candidate. If \(L\) represents a leg, then \(L^2=\pm(F^2-G^2)\). If it represents the hypotenuse, then \(L^2=F^2+G^2\).
+
+\paragraph{The case \(L=A_j\) with \(j=1,2\).}
+If \(L\) represents a leg, \eqref{eq:p3q-sum-difference} and \(pq\mid L\) give \(p^2\mid UV\) and \(q^2\mid XY\), after cancellation of the units \(4XY\) modulo \(p^2\) and \(4UV\) modulo \(q^2\), respectively. Since \(\gcd(U,V)=\gcd(X,Y)=1\), each prime square divides one factor of the corresponding product. The norm identities then imply \(p^2<q\) and \(q^2<p^3\), a contradiction.
+
+If \(L\) represents the hypotenuse, rewrite \(2(Y^2U^2+X^2V^2)\) as \(2Y^2(U^2-V^2)+2p^6V^2\) and as \(2V^2(X^2-Y^2)+2q^2Y^2\). Reduction modulo \(p^2\) and \(q^2\), respectively, gives
+\[
+p^2\mid(U-V)(U+V),\qquad q^2\mid(X-Y)(X+Y).
+\]
+Each pair consists of nonzero odd integers and is coprime, since any common divisor is odd and divides twice each of the original coordinates. Thus each prime square divides one factor of the corresponding product. It follows from
+\[
+(U-V)^2+(U+V)^2=2q^2,\qquad
+(X-Y)^2+(X+Y)^2=2p^6
+\]
+that \(p^4\le2q^2\) and \(q^4\le2p^6\). Hence \(p^8\le8p^6\), which contradicts \(p\ge5\).
+
+\paragraph{The case \(L=A_3\) or \(C\).}
+If \(A_3\) represents a leg, cancelling the nonzero factor \(Y\) gives \(q^2Y=\pm4XUV\). Since \(q\nmid4UV\), write \(X=q^2k\), so \(Y=\pm4kUV\). Coprimality of \(X,Y\) gives \(|k|=1\), so \(|X|=q^2\) and \(|Y|=4|UV|\le2q^2\). On the other hand, write \(\pi^3=M+iN\). Then \(X=(M-N)(M+N)\) and \(Y=2MN\). By Section~\ref{sec:common-hypotenuse}, \(M,N\) have opposite parity and are coprime. Thus \(M-N,M+N\) are odd and coprime, since any common divisor divides \(2M\) and \(2N\). Their absolute values must be \(1\) and \(q^2\). The identity \(2Y=(M+N)^2-(M-N)^2\) gives \(2|Y|=q^4-1>4q^2\), a contradiction.
+
+If \(C\) represents a leg, cancelling the nonzero factor \(V\) gives \(p^6V=\pm4XYU\). As \(p\nmid4XY\) and \(\gcd(U,V)=1\), the same reasoning gives \(|U|=p^6\) and \(|V|=4|XY|\le2p^6\). Since \(U+iV=\rho^2\), we have \(U=(\operatorname{Re}\rho-\operatorname{Im}\rho)(\operatorname{Re}\rho+\operatorname{Im}\rho)\). The factors are coprime by the argument for \(M-N,M+N\). Their absolute values are therefore \(1\) and \(p^6\), so \(2|V|=p^{12}-1>4p^6\), a contradiction. Both strict inequalities used here follow from \(m^2-1>4m\) for \(m\ge5\).
+
+If \(A_3\) represents the hypotenuse, the sum identity in \eqref{eq:p3q-sum-difference} and \(U^2+V^2=q^2\) give \(2(X^2-Y^2)V^2=-q^2Y^2\). If \(C\) represents the hypotenuse, \eqref{eq:p3q-sum-difference} gives \(2U^2Y^2=(p^6-2X^2)V^2\). All squared factors are nonzero, and \(X^2-Y^2\), \(-q^2\), \(U^2\), and \(p^6-2X^2\) are odd. In each equation, the left-hand side has odd \(2\)-adic valuation and the right-hand side has even \(2\)-adic valuation, a contradiction.
+
+\paragraph{The case \(L=B_2^\tau\).}
+Let \(D=3R^2-S^2\), which is odd, so \(Y=DS\). We have
+\[
+L=p(2\alpha S+\beta V),\qquad \alpha=RU,\qquad \beta=\tau T.
+\]
+If \(L\) represents a leg, \eqref{eq:p3q-sum-difference} requires
+\[
+p^2(2\alpha S+\beta V)^2=4d_0SV,\qquad d_0=\pm XDU.
+\]
+Here \(p,\alpha,\beta,d_0\) are all odd. Reduction modulo \(2\) gives \(2\mid V\). Writing \(V=2v\) and dividing by \(4\) gives \(p^2(\alpha S+\beta v)^2=2d_0Sv\). If \(S\) is odd, then reduction modulo \(2\) forces \(v\) to be odd. In that case the right-hand side is \(2\pmod4\), which is impossible for a square. Thus \(S,V\) are both even. With the coefficients fixed, the homogeneous quadratic equation also holds for \((S/2,V/2)\). Iterating shows that every power of \(2\) divides \(S\), a contradiction to \(S\ne0\).
+
+If \(L\) represents the hypotenuse, the required equation is
+\[
+p^2(2\alpha S+\beta V)^2=2\bigl((DUS)^2+(XV)^2\bigr).
+\]
+Reducing modulo \(2\) again gives \(2\mid V\). Now the left-hand side is \(0\pmod4\), while the right-hand side is \(2\pmod4\) if \(S\) is odd. Thus \(S,V\) are both even, and the same descent with fixed coefficients gives a contradiction.
+
+\paragraph{The case \(L=B_1^\tau\).}
+Replace \(V\) by \(\tau V\) to take \(\tau=1\). This only changes the possible sign of the difference in \eqref{eq:p3q-sum-difference}, and both signs are allowed. Set
+\[
+P=(R^2+S^2)^2=p^4,\qquad K=3T^2-W^2,\qquad XY=RSK.
+\]
+For integers \(u\ne0,v\) satisfying \(Av^2+Buv+Cu^2=0\), we have
+\begin{equation}\label{eq:p3q-discriminant}
+(2Av+Bu)^2=(B^2-4AC)u^2.
+\end{equation}
+Hence the discriminant is a rational square. If an integer is a rational square, writing the square root in lowest terms shows that the root is an integer. In particular, dividing the discriminant by a nonzero integer square gives another integer square whenever the quotient is integral.
+
+If \(L\) represents a leg, the equation is
+\[
+P(SU+RV)^2=\eta\,4XYUV,\qquad \eta\in\{1,-1\}.
+\]
+With \(u=U,v=V\) in \eqref{eq:p3q-discriminant}, the coefficients of the quadratic are \(PR^2\), \(2PRS-4\eta XY\), and \(PS^2\). Substituting \(XY=RSK\) gives discriminant \((4RS)^2K(K-\eta P)\). Since \(RS\ne0\), the integer \(K(K-\eta P)\) must be a square. Since \(T,p\) are odd and \(4\mid W\), we have \(K\equiv3\pmod8\) and \(P\equiv1\pmod8\). If \(\eta=1\), the product is \(6\pmod8\), a contradiction. If \(\eta=-1\), then \(P=T^2+W^2\) gives \(K+P=4T^2\). As \(T\ne0\), the integer \(K\) must be a square. Write \(K=k^2\), so \(k^2+W^2=3T^2\). Modulo \(3\) this gives \(3\mid k,W\), hence \(9\mid3T^2\) and \(3\mid T\). This contradicts \(T^2+W^2=p^4\).
+
+If \(L\) represents the hypotenuse, the equation is
+\[
+P(SU+RV)^2=2(Y^2U^2+X^2V^2).
+\]
+The coefficients in \eqref{eq:p3q-discriminant} are now \(PR^2-2X^2\), \(2PRS\), and \(PS^2-2Y^2\). Substitution of the expressions for \(X,Y,T\) and expansion give discriminant
+\[
+(8RST)^2\bigl(14R^2S^2-R^4-S^4\bigr).
+\]
+Since \(R,S,T\) are nonzero, the factor in parentheses must be an integer square. Yet \(R\) is odd and \(4\mid S\), so this integer is \(7\pmod8\), a contradiction.
+
+These cases exhaust the triples of distinct labels containing at least two of \(\{A_3,B_3^+,B_3^-\}\).
+\end{proof}
+
+\section{Passage from primitive to general cuboids}
+\label{sec:general}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+Let \(s=\gcd(a,b,c)\). By \eqref{eq:cuboid}, the square of each face diagonal and of the body diagonal is divisible by \(s^2\). Comparing prime valuations shows that every diagonal is divisible by \(s\). Dividing all seven lengths by \(s\) gives a primitive perfect cuboid with body diagonal \(g'=g/s\). Its edges are positive integers, so \((g')^2\ge 3\) and in particular \(g'>1\).
+
+Suppose \(g=p^kq\) with \(k\in\{2,3\}\). Since \(g'\mid p^kq\), either \(g'\) is a prime power or \(g'=p^jq\) for some \(1\le j\le k\). Section~\ref{sec:lower-diagonals} rules out the prime-power case and \(j=1\). Propositions~\ref{prop:p2q} and~\ref{prop:p3q} rule out \(j=2,3\), respectively.
+\end{proof}
+
+For \(p^2q\), this theorem excludes the perfect cuboid configurations corresponding to all 57 orbits in \cite{ref2}, including the 22 left open there. The exclusion uses the primitive reduction and the conditions in Lemma~\ref{lem:common-hypotenuse}. An individual algebraic relation considered without those conditions has its own solution set.
+
+\section{Lean formalization and reproducibility}
+\label{sec:lean}
+
+Korec's two lower-exponent exclusions have an independent Lean formalization~\cite{ref5}. The present project uses Lean~4.34.1 \cite{ref6} and Mathlib~4.34.1 \cite{ref7}. The file \texttt{CuboidBasic.\allowbreak{}lean} defines a perfect cuboid by its positive integral lengths and the four square identities in \eqref{eq:cuboid}. The file \texttt{CuboidTheorems.\allowbreak{}lean} contains the two final theorems.
+\begin{verbatim}
+CuboidFormal.forbidden_p2q
+CuboidFormal.forbidden_p3q
+\end{verbatim}
+Their statements quantify over all distinct primes \(p,q\) and all perfect cuboids. The primitive reduction is part of each proof.
+
+\texttt{GaussianRepr.\allowbreak{}lean} and \texttt{GaussianPhase.\allowbreak{}lean} verify the common-hypotenuse candidates and Gaussian divisibility comparisons. \texttt{P2Proof.\allowbreak{}lean} and \texttt{P3Proof.\allowbreak{}lean} establish the primitive exclusions. \texttt{LowerDiagonal.\allowbreak{}lean} proves the lower-exponent exclusions, and \texttt{PrimitiveReduction.\allowbreak{}lean} verifies the scaling argument.
+
+The following companion archive contains the source, dependency manifest, toolchain version, and verification logs.
+\begin{verbatim}
+Perfect_Cuboid_Lean_Full_Verification.zip
+\end{verbatim}
+
+From the project directory, run the following commands to build the project, inspect the final statements and their axioms, and independently replay the proofs.
+
+\begin{verbatim}
+lake build CuboidProof
+lake env lean CuboidAudit.lean
+lake env leanchecker --fresh --verbose CuboidTheorems
+\end{verbatim}
+
+For each final theorem, \texttt{CuboidAudit.\allowbreak{}lean} reports exactly the axioms \texttt{propext}, \texttt{Classical.\allowbreak{}choice}, and \texttt{Quot.\allowbreak{}sound}. The fresh kernel replay of the target module and its imports completed successfully. The build, the axiom audit, and the kernel replay are recorded in \texttt{lean-build.\allowbreak{}log}, \texttt{lean-audit.\allowbreak{}log}, and \texttt{lean-replay.\allowbreak{}log}, respectively.
+
+\section*{Acknowledgments}
+
+We thank Ivan Korec for his work on prime divisors and lower-exponent exclusions for the body diagonal of a perfect cuboid. We thank Aletheia, Neo.K, and Xuán Héng for making available the common-hypotenuse reduction, the seven-candidate classification, the orbit exclusions, and the accompanying audit notes. These records made it possible to check the earlier arguments and the outstanding cases individually. We also thank ProofAtlas for documenting the prior claim and the questions it poses for verification, yachi and contributors for the Lean formalization of Korec's theorem, and the Lean and Mathlib communities for the proof assistant and library used here. OpenAI Codex assisted with mathematical exploration, Lean proof development, and manuscript preparation.
+
+\begin{thebibliography}{9}
+\raggedright
+\bibitem{ref1}
+I.~Korec, \emph{Lower bounds for perfect rational cuboids},
+Mathematica Slovaca \textbf{42} (1992), no.~5, 565--582.
+\href{https://dml.cz/handle/10338.dmlcz/132903}{DML-CZ}.
+
+\bibitem{ref2}
+Aletheia, Neo.K, and Xuán Héng, \emph{Which body diagonals a perfect cuboid can have: prime powers, products of two primes, and the 22 open orbits of \(p^2q\)},
+AMRAL preprint, version~0.1, 8 November 2026.
+\href{https://amral.evemisslab.com/en/perfect-cuboid/papers/body-diagonal-factorization/}{Preprint and supplements}.
+
+\bibitem{ref3}
+AMRAL, \emph{Phase 1G-B: Proof-safe quotient of the \(g=p^2q\) seven-state system},
+working note, Sections~6--7.
+\href{https://amral.evemisslab.com/en/perfect-cuboid/files/phase1g_b_p2q_four_class_reduction.md}{Online version}.
+
+\bibitem{ref4}
+ProofAtlas, \emph{Perfect cuboid problem},
+Collaboration beta research record, source context dated 13 August 2026, accessed 21 November 2026.
+\href{https://www.proofatlas.ai/collaboration/perfect-cuboid-problem/}{Research record}.
+
+\bibitem{ref5}
+yachi, \emph{Korec's theorem: the space diagonal of a perfect cuboid is neither a prime power nor a product of two primes},
+\texttt{lean-playground}, pull request \#18, merged 27 October 2026.
+\href{https://github.com/yachi/lean-playground/pull/18}{Source and merge record}.
+
+\bibitem{ref6}
+L.~de Moura and S.~Ullrich, \emph{The Lean 4 theorem prover and programming language},
+in \emph{Automated Deduction -- CADE 28}, Lecture Notes in Computer Science, vol.~12699, Springer, Cham, 2021, pp.~625--635.
+\href{https://doi.org/10.1007/978-3-030-79876-5_37}{doi:10.1007/978-3-030-79876-5\_37}.
+\href{https://github.com/leanprover/lean4/releases/tag/v4.34.1}{Lean v4.34.1}.
+
+\bibitem{ref7}
+The mathlib Community, \emph{The Lean mathematical library},
+in \emph{Proceedings of the 9th ACM SIGPLAN International Conference on Certified Programs and Proofs}, ACM, New York, 2020, pp.~367--381.
+\href{https://doi.org/10.1145/3372885.3373824}{doi:10.1145/3372885.3373824}.
+\href{https://github.com/leanprover-community/mathlib4/releases/tag/v4.34.1}{Mathlib v4.34.1}.
+\end{thebibliography}
+\end{document}

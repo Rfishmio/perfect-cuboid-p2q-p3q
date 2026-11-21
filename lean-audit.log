@@ -1,0 +1,4 @@
+forbidden_p2q : ForbiddenDiagonal 2
+forbidden_p3q : ForbiddenDiagonal 3
+'CuboidFormal.forbidden_p2q' depends on axioms: [propext, Classical.choice, Quot.sound]
+'CuboidFormal.forbidden_p3q' depends on axioms: [propext, Classical.choice, Quot.sound]

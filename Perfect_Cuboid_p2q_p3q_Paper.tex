@@ -1,0 +1,569 @@
+% Compile twice with XeLaTeX, or build with Tectonic.
+\documentclass[11pt,a4paper,twoside]{article}
+\usepackage[a4paper,inner=28mm,outer=28mm,top=27mm,bottom=26mm,headheight=15pt,headsep=5mm]{geometry}
+\usepackage{fontspec}
+\usepackage{amsmath,amssymb,booktabs}
+\usepackage{xeCJK}
+\setmainfont{Times New Roman}
+\setmonofont{Consolas}[Scale=MatchLowercase]
+\IfFontExistsTF{SimSun}
+  {\setCJKmainfont[BoldFont=SimHei]{SimSun}\setCJKsansfont{SimHei}}
+  {\setCJKmainfont[BoldFont=FandolHei-Regular.otf]{FandolSong-Regular.otf}
+   \setCJKsansfont{FandolHei-Regular.otf}}
+\usepackage[unicode,hidelinks,pdfdisplaydoctitle]{hyperref}
+\hypersetup{pdftitle={完美长方体体对角线 p²q 与 p³q 的排除及 Lean 形式化},pdfauthor={GPT6.2, 刘泰然, 刘英玺, 朱禹丞, 张利硕, 孔维森},pdfsubject={丢番图方程与形式化证明}}
+
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\setlength{\emergencystretch}{1.5em}
+\setlength{\abovedisplayskip}{9pt plus 2pt minus 3pt}
+\setlength{\belowdisplayskip}{9pt plus 2pt minus 3pt}
+\setlength{\abovedisplayshortskip}{4pt plus 2pt}
+\setlength{\belowdisplayshortskip}{6pt plus 2pt minus 2pt}
+\linespread{1.12}
+\raggedbottom
+\allowdisplaybreaks[2]
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=5000
+\numberwithin{equation}{section}
+
+\newcommand{\paperauthors}{作者：GPT6.2\qquad 共同作者：刘泰然、刘英玺、朱禹丞、张利硕、孔维森}
+\newcommand{\paperaffiliation}{}
+\newcommand{\paperrunningtitle}{完美长方体体对角线的排除}
+\newcommand{\paperstatus}{预印本\enspace·\enspace 2026 年 11 月 21 日}
+\newcommand{\proofof}{定理~\ref{thm:main} 的证明}
+\newcommand{\proseheadingstop}{。}
+\newcommand{\theorembodyfont}{\normalfont}
+\newtheorem{theorem}{定理}[section]
+\newtheorem{lemma}[theorem]{引理}
+\newtheorem{proposition}[theorem]{命题}
+\providecommand{\proofname}{证明}
+
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{\z@}%
+  {-2.7ex \@plus -.65ex \@minus -.2ex}{1.05ex \@plus .15ex}%
+  {\normalfont\large\bfseries}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+  {-2.15ex \@plus -.55ex \@minus -.2ex}{.72ex \@plus .12ex}%
+  {\normalfont\normalsize\bfseries}}
+\def\@begintheorem#1#2{%
+  \trivlist\item[\hskip\labelsep\bfseries #1~#2\proseheadingstop]%
+  \theorembodyfont}
+\def\@opargbegintheorem#1#2#3{%
+  \trivlist\item[\hskip\labelsep\bfseries #1~#2\enspace (#3)\proseheadingstop]%
+  \theorembodyfont}
+\newenvironment{proof}[1][\proofname]{%
+  \par\addvspace{.65\baselineskip}\noindent
+  \textit{#1}\proseheadingstop\enspace\ignorespaces
+}{%
+  \unskip\nobreak\hfill\nobreak\(\square\)\par
+  \addvspace{.65\baselineskip}
+}
+\newcommand{\journalheadingbox}[2]{%
+  \vbox{\hb@xt@\textwidth{\normalfont\small #1\hfil #2}%
+    \vskip 3pt\hrule height .35pt}}
+\def\ps@journal{%
+  \def\@oddhead{\journalheadingbox{\paperrunningtitle}{\thepage}}%
+  \def\@evenhead{\journalheadingbox{\thepage}{\paperrunningtitle}}%
+  \let\@oddfoot\@empty\let\@evenfoot\@empty}
+\renewcommand{\maketitle}{%
+  \thispagestyle{plain}%
+  \begin{center}
+    {\LARGE\bfseries\@title\par}
+    \ifx\paperauthors\@empty\else
+      \vspace{.8em}{\large\paperauthors\par}
+    \fi
+    \ifx\paperaffiliation\@empty\else
+      \vspace{.2em}{\small\paperaffiliation\par}
+    \fi
+    \vspace{.65em}{\small\paperstatus\par}
+  \end{center}
+  \vspace{.45em}
+}
+\makeatother
+
+\newenvironment{paperabstract}{%
+  \begin{list}{}{\setlength{\leftmargin}{6mm}\setlength{\rightmargin}{6mm}%
+    \setlength{\topsep}{0pt}\setlength{\parsep}{0pt}}%
+  \item\normalsize\ignorespaces
+}{\end{list}\vspace{.45em}}
+\newcommand{\frontfield}[2]{\par\noindent\textbf{#1}\enspace #2}
+\renewcommand{\refname}{参考文献}
+\renewcommand{\tablename}{表}
+\pagestyle{journal}
+
+\begin{document}
+\title{完美长方体体对角线 \(p^2q\) 与 \(p^3q\) 的排除\\及 Lean 形式化}
+% Supply the verified affiliation information here for submission.
+% \renewcommand{\paperaffiliation}{}
+\maketitle
+\begin{paperabstract}
+\frontfield{摘要}{设 \(p,q\) 为不同素数。本文证明，完美长方体的体对角线既不能为 \(p^2q\)，也不能为 \(p^3q\)。对本原长方体，两个偶棱及其面对角线组成三条共斜边的偶直角边，它们同时满足一个勾股关系。高斯整数的唯一分解分别给出七个和十个带符号的候选表达式。我们利用共轭高斯素数幂上的整除比较、赋值和判别式排除所有满足本原性约束的候选三元组。结合低指数情形与缩放规约，结论推广到任意完美长方体。两条定理均在 Lean 4 与 Mathlib 中形式化，并通过了内核重放。}
+\smallskip
+\frontfield{2020 数学主题分类}{11D09（主分类），11D72（次分类）。}
+\frontfield{关键词}{完美长方体，高斯整数，体对角线，Lean 4。}
+\end{paperabstract}
+
+\section{引言}
+\label{sec:introduction}
+
+完美长方体是三条棱、三条面对角线及体对角线的长度均为正整数的直角长方体。若棱长为 \(a,b,c\)，三条面对角线为 \(d_{ab},d_{ac},d_{bc}\)，体对角线为 \(g\)，这些条件写作
+
+\begin{equation}\label{eq:cuboid}
+\begin{aligned}
+d_{ab}^2&=a^2+b^2,& d_{ac}^2&=a^2+c^2,\\
+d_{bc}^2&=b^2+c^2,& g^2&=a^2+b^2+c^2.
+\end{aligned}
+\end{equation}
+
+若 \(\gcd(a,b,c)=1\)，称该长方体为本原。Korec 在文献 \cite{ref1} 的引理 2.1 中证明，本原完美长方体的体对角线的每个素因子都模 \(4\) 余 \(1\)。该文定理 5.1 排除了素数幂和两个素数的乘积。
+
+Aletheia、Neo.K 与懸衡的预印本 \cite{ref2} 系统展开了 \(p^2q\) 的共斜边分类。七个候选表达式给出 105 个指定斜边的关系。按 \(q\) 的高斯素因子取共轭，这些关系组成 57 个轨道，其中 35 个已排除，22 个留待处理。AMRAL 的另一份研究稿 \cite{ref3} 采用不同的商分类，并记载了 ProofAtlas \cite{ref4} 所收录的另一项 \(p^2q\) 完整排除主张。该公开记录要求复查其互素性和平方整除步骤，原始推导和署名无法从所引资料核实。本文在已有共斜边和高斯整数分类的基础上，给出两类体对角线的完整排除。
+
+\begin{theorem}\label{thm:main}
+设 \(p,q\) 为不同素数。不存在体对角线为 \(p^2q\) 的完美长方体，也不存在体对角线为 \(p^3q\) 的完美长方体。
+\end{theorem}
+
+第~\ref{sec:common-hypotenuse}、\ref{sec:gaussian-comparison} 节分别建立共斜边规约和高斯素数幂的比较方法。第~\ref{sec:lower-diagonals} 节重证所需的低指数排除 \cite{ref1}，第~\ref{sec:p2q}、\ref{sec:p3q} 节分别证明两个本原情形。第~\ref{sec:general} 节完成向一般情形的推广，第~\ref{sec:lean} 节给出形式化与复现说明。
+
+\section{共斜边规约与候选表达式}
+\label{sec:common-hypotenuse}
+
+\begin{lemma}[共斜边与素因子]\label{lem:common-hypotenuse}
+设存在本原完美长方体。重排棱长后，可令 \(a\) 为奇数、\(b,c\) 为偶数。令 \(d=d_{bc}\)。则 \(b,c,d\) 是两两不同的正偶数，满足 \(b^2+c^2=d^2\)，且
+
+\[
+b^2+d_{ac}^2=c^2+d_{ab}^2=d^2+a^2=g^2.
+\]
+
+体对角线 \(g\) 为奇数。若 \(\ell\) 为 \(g\) 的任一素因子，则 \(\ell\equiv1\pmod4\)，且 \(b,c,d\) 中至少两个不被 \(\ell\) 整除。
+
+\end{lemma}
+
+\begin{proof}
+本原性保证至少一条棱为奇数。若两条棱均为奇数，则对应的面对角线平方模 \(4\) 为 \(2\)，不可能。于是恰有一条奇棱。由平方等式，\(d\) 为偶数，而 \(d_{ab},d_{ac},g\) 为奇数。\(d>\max(b,c)\)。若 \(b=c\)，则 \(d^2=2b^2\)，两侧的 \(2\)-进赋值分别为偶数和奇数，矛盾。这里及下文，\(v_\ell(n)\) 表示非零整数 \(n\) 中素数 \(\ell\) 的指数。
+
+若 \(\ell\equiv3\pmod4\)，则 \(-1\) 在模 \(\ell\) 下非平方。上述每一个平方和中，\(\ell\mid g\) 都将迫使两个分量被 \(\ell\) 整除，特别是 \(\ell\mid a,b,c\)，与本原性矛盾。由于 \(g\) 为奇数，每个素因子均为 \(1\pmod4\)。若 \(\ell\) 整除 \(b,c,d\) 中至少两个，勾股关系迫使第三个也被 \(\ell\) 整除。再用 \(g^2=d^2+a^2\) 得 \(\ell\mid a\)，仍与本原性矛盾。
+\end{proof}
+
+记 \(N(w)=w\bar w\) 为高斯范数。环 \(\mathbb Z[i]\) 关于 \(N\) 是欧几里得整环，因为高斯商的实部与虚部可分别取最近的整数，使余数的范数严格下降。因此它有唯一分解。对素数 \(\ell\equiv1\pmod4\)，可取 \(t^2\equiv-1\pmod\ell\)，例如在循环群 \(\mathbb F_\ell^\times\) 中取一个四阶元素。映射 \(\mathbb Z[i]\to\mathbb F_\ell\) 将 \(i\) 送到 \(-t\)，故 \(\gcd(\ell,t+i)\) 为非单位。\(\ell\) 本身不整除 \(t+i\)，所以该最大公因子的范数为 \(\ell\)。范数为素数的高斯整数必为素元，因为它在唯一分解整环中不可约。取适当单位倍数，得 \(\ell=\lambda\bar\lambda\)，且 \(\lambda\) 的实部奇、虚部偶。它与 \(\bar\lambda\) 不相伴。若二者相差单位 \(\pm1\)，则某一坐标为零，使 \(\ell\) 成为整数平方。若相差单位 \(\pm i\)，则两坐标绝对值相等，使 \(\ell\) 为偶数。
+
+对 \(n\ge1\)，\(\lambda^n\) 的两坐标均非零。若某坐标为零，则 \(\lambda^n=\pm\bar\lambda^n\)，违反唯一分解。两坐标也互素，因为公共有理素因子的平方整除 \(\ell^n\)，该素因子只能为 \(\ell\)，而 \(\ell\mid\lambda^n\) 会推出 \(\bar\lambda\mid\lambda^n\)。再对范数式取模 \(\ell\)，可知 \(\ell\) 不整除任一坐标。奇实偶虚的性质在乘法和共轭下保持，故 \(\lambda^{2j}\) 的实部为奇数，虚部为 \(4\) 的倍数。由于两坐标均非零，它们的绝对值各自严格小于 \(\sqrt{N(\lambda^{2j})}=\ell^j\)。
+
+\begin{lemma}[候选表达式]\label{lem:candidates}
+假设 \(g=p^kq\)，其中 \(k\ge1\)，\(p,q\) 为不同素数且均模 \(4\) 余 \(1\)。取奇实偶虚的高斯素元 \(\pi,\rho\)，满足 \(N(\pi)=p\)、\(N(\rho)=q\)。写 \(R_j+iI_j=\pi^{2j}\) 和 \(U+iV=\rho^2\)。斜边为 \(g\) 且另一条边为奇数的正偶直角边，其值必为下列某一表达式的绝对值
+
+\[
+A_j=p^{k-j}qI_j,\qquad B_j^\sigma=p^{k-j}(I_jU+\sigma R_jV),\qquad C=p^kV,
+\quad 1\le j\le k,\quad \sigma\in\{1,-1\}.
+\]
+
+其中 \(v_p(A_j)=v_p(B_j^\sigma)=k-j\)，\(p^k\mid C\)，并且 \(q\mid A_j\)、\(q\nmid B_j^\sigma C\)。本原长方体给出的三个偶数长度具有不同标签，且至少两个标签属于 \(\{A_k,B_k^+,B_k^-\}\)。
+
+\end{lemma}
+
+\begin{proof}
+将斜边为 \(g\) 的右三角形写为 \(w=o+ie\)，其中 \(o\) 奇、\(e\) 偶，且 \(N(w)=g^2\)。唯一分解给出
+
+\[
+w=\epsilon\pi^{k+j}\bar\pi^{k-j}\rho^{1+t}\bar\rho^{1-t},
+\qquad -k\le j\le k,\qquad t\in\{-1,0,1\}.
+\]
+
+因所有高斯因子都是奇实偶虚，\(\epsilon\) 只能为 \(1\) 或 \(-1\)。取整体共轭可令 \(j\ge0\)，并只改变虚部符号。若 \(j=t=0\)，虚部为零，应予舍去。\(j>0\) 时，\(t=0\) 给出 \(A_j\)，\(t=\pm1\) 给出 \(B_j^\pm\)。\(j=0\) 的非零情形给出 \(C\)。
+
+去掉 \(p^{k-j}\) 后，\(A_j,B_j^\sigma\) 的高斯代表含 \(\pi^{2j}\) 而不含 \(\bar\pi\)。其共轭被 \(\bar\pi\) 整除。若其虚部是 \(p\) 的倍数，则 \(\bar\pi\) 整除 \(w-\bar w=2i\operatorname{Im}w\)，从而整除代表本身，矛盾。这给出所述 \(p\)-进赋值。对 \(B_j^\sigma,C\) 取共轭使其代表含 \(\rho^2\)，用 \(\bar\rho\) 作同样判断，得 \(q\nmid B_j^\sigma C\)。其余整除由表达式直接可见。由于三个正偶数互异，同一个候选标签不能用于两个长度。引理~\ref{lem:common-hypotenuse} 表明其中至少两个不被 \(p\) 整除，故来自所列三个标签。
+\end{proof}
+
+\section{高斯素数幂的双向比较}
+\label{sec:gaussian-comparison}
+
+沿用引理~\ref{lem:candidates} 的记号。以下同余直接在高斯整数环中取共轭素元的幂为模。
+
+设 \(\ell\equiv1\pmod4\) 为素数，取 \(N(\lambda)=\ell\) 的高斯素元 \(\lambda\) 和 \(n\ge1\)。对 \(b\in\mathbb Z\)，有
+\[
+\lambda^n\mid b \ \text{于 }\mathbb Z[i]\qquad\Longleftrightarrow\qquad \ell^n\mid b \ \text{于 }\mathbb Z.
+\]
+事实上，左式取共轭还给出 \(\bar\lambda^n\mid b\)，两个互素因子的乘积 \(\ell^n\) 便整除 \(b\)。取高斯商的实部即得整数商。反向由 \(\ell^n=\lambda^n\bar\lambda^n\) 直接得到。结合
+\[
+z+\bar z=2\Re z,\qquad z-\bar z=2i\Im z,
+\]
+以及 \(\ell\) 为奇数，得 \(\lambda^n\mid z+\bar z\) 时 \(\ell^n\mid\Re z\)，而 \(\lambda^n\mid z-\bar z\) 时 \(\ell^n\mid\Im z\)。
+
+若 \(\lambda^n\mid\bar Z_1,\bar Z_2\) 且 \(\ell^n\mid(\Im Z_1)^2-\varepsilon(\Im Z_2)^2\)，其中 \(\varepsilon\in\{1,-1\}\)，则
+\[
+\lambda^n\mid Z_1^2-\varepsilon Z_2^2.
+\]
+因为模 \(\lambda^n\) 有 \(Z_r\equiv 2i\Im Z_r\)，将整数平方同余乘以 \((2i)^2\) 即得上式。若 \(Z_1,Z_2\) 有公共因子 \(u\) 且 \(\lambda\nmid u\)，可消去 \(u^2\)，因为 \(u\) 与 \(\lambda^n\) 互素。
+
+\subsection{含 \texorpdfstring{\(A_k,B_k^\sigma\)}{Aₖ,Bₖ(σ)} 和较低候选的三元组}
+\label{subsec:gaussian-comparison}
+本节比较适用于 \(k\ge1\)。写 \(I_j=\Im(\pi^{2j}),\ R_j=\Re(\pi^{2j}),\ U+iV=\rho^2\)，用带符号候选
+\[
+A_j=p^{k-j}qI_j,\qquad B_j^\sigma=p^{k-j}(I_jU+\sigma R_j V),\qquad
+C=p^kV,\qquad \sigma=\pm1.
+\]
+同余中的三元关系一律取候选的平方。若第三项为 \(A_j\)（\(j<k\)），两项均含 \(q\)，而 \(B_k^\sigma\) 模 \(q\) 非零，立即矛盾。其余设 \(H=B_k^\sigma\)，第三项 \(L=B_j^\tau\)（\(1\le j<k\)）或 \(L=C\)（约定 \(j=0\)）。
+
+\textbf{由 \(p\) 比较。} 取 \(1\le n\le 2(k-j)\)。因 \(p^{k-j}\mid L\)，勾股关系给出
+\[
+p^n\mid A_k^2-\varepsilon H^2
+\]
+（若 \(L\) 为斜边，取 \(\varepsilon=-1\)，其余取 \(+1\)）。令 \(z=\rho\) 或 \(\bar\rho\) 以匹配 \(\sigma\)，则 \(A_k,H\) 分别是 \(q\pi^{2k}\)、\(\pi^{2k}z^2\) 的虚部。二者的共轭均含 \(\bar\pi^{2k}\)，且 \(\bar\pi\nmid\pi,z\)。对 \(\lambda=\bar\pi\) 应用上式并消去 \(\pi^{4k}\)，得
+\[
+\bar\pi^n\mid q^2-\varepsilon z^4=z^2(\bar z^{\,2}-\varepsilon z^2).
+\]
+再消去 \(z^2\) 并读出坐标，得 \(p^n\) 整除 \(\Re(z^2)\) 或 \(\Im(z^2)\)。两者均非零且平方和为 \(q^2\)，故 \(p^n<q\)。
+
+\textbf{由 \(q\) 比较。} 因 \(q\mid A_k\)，有 \(q^2\mid H^2-\eta L^2\)，其中 \(A_k\) 为斜边时 \(\eta=-1\)，为直角边时 \(\eta=+1\)。将每个高斯代表按需取共轭，统一令其含 \(\rho^2\)。取共轭只改变虚部的符号。取 \(c=\pi\)（\(\sigma=+1\)）或 \(\bar\pi\)（\(\sigma=-1\)），置
+\[
+\delta=\begin{cases}k-j,&\sigma=\tau,\\ k+j,&\sigma\ne\tau,\end{cases}
+\qquad
+u=\rho^2c^{2k-\delta},\qquad x=c^\delta .
+\]
+对于 \(C\) 置 \(\delta=k\)。若两符号相同，\(u\bar x=\rho^2c^{k+j}\bar c^{k-j}=\rho^2p^{k-j}c^{2j}\)。若两符号相反，则 \(u\bar x=\rho^2p^{k-j}\bar c^{2j}\)。当 \(L=C\) 时，\(u\bar x=\rho^2 p^k\)。由此 \(H,L\) 的平方分别是 \(ux\)、\(u\bar x\) 的虚部平方。二者的共轭均含 \(\bar\rho^2\)，并且 \(\bar\rho\nmid u\)。得
+\[
+\bar\rho^2\mid x^2-\eta\bar x^{\,2}.
+\]
+这给出 \(q^2\) 整除 \(x^2\) 的一个坐标。当 \(\eta=-1\) 时，该坐标是实部。由于 \(\delta>0\) 且 \(N(x^2)=p^{2\delta}\)，有 \(q^2<p^\delta\)。
+
+若 \(\eta=+1\)，可加强此界。因
+\[
+\bar\rho^2\mid(x-\bar x)(x+\bar x),
+\]
+且 \(\bar\rho\) 不可能同时整除两个因子（否则 \(\bar\rho\mid 2x\)，而 \(\bar\rho\nmid2,x\)），故 \(\bar\rho^2\) 整除其中一个因子。这里 \(\bar\rho\nmid2\) 来自 \(q\nmid N(2)=4\)，\(\bar\rho\nmid x\) 来自 \(p\ne q\)。于是 \(q^2\) 整除 \(\Re x\) 或 \(\Im x\)。两个坐标均非零，故
+\[
+q^4\le(\Re x)^2\quad\text{或}\quad q^4\le(\Im x)^2,\qquad
+q^4<(\Re x)^2+(\Im x)^2=p^\delta.
+\]
+
+\section{已知低阶对角线的排除}
+\label{sec:lower-diagonals}
+
+本节用上述共同斜边规约重证 Korec 定理 5.1 \cite{ref1} 中的两类排除。记 \(x=b,y=c,z=d\)，与之配对的奇数长度分别为 \(d_{ac},d_{ab},a\)。
+
+\subsection{素数幂 \texorpdfstring{\(g=p^k\)}{g=pᵏ}}
+设 \(k\ge 1\)。由本原长方体的素因子条件，\(p\equiv1\pmod4\)。写 \(p=\pi\bar\pi\)，其中 \(\pi\) 是实部为奇数、虚部为偶数的高斯素数，且 \(\pi,\bar\pi\) 互素。若 \(e\in\{x,y,z\}\) 对应的奇数长度为 \(o\)，则 \(w=o+ie\) 满足 \(w\bar w=p^{2k}\)。高斯整数的唯一分解给出 \(w=\varepsilon\pi^a\bar\pi^b\)，其中 \(\varepsilon\) 为单位，取范数得 \(a+b=2k\)。若 \(p\nmid e\)，则 \(a,b\) 至少一个为零，因为两者均为正时 \(p=\pi\bar\pi\) 整除 \(w\) 的两个坐标。
+
+实部奇、虚部偶的高斯整数相乘后仍有相同的奇偶性。因此，\(\pi^{2k}\) 和 \(\bar\pi^{2k}\) 的实部均为奇数，虚部均为偶数。为了使 \(w\) 的虚部为偶数，单位 \(\varepsilon\) 只能取 \(1\) 或 \(-1\)。共轭只改变虚部的符号，故所有不被 \(p\) 整除的正偶数长度都等于 \(|\operatorname{Im}(\pi^{2k})|\)。至少两个不同的长度必须取这一值，矛盾。\(k=0\) 时 \(g=1\)，而三条正整数棱的平方和至少为 \(3\)。
+
+\subsection{两个不同素数的乘积 \texorpdfstring{\(g=pq\)}{g=pq}}
+两个相同素数的乘积已在素数幂情形排除。设 \(p\ne q\)，由引理~\ref{lem:common-hypotenuse} 得 \(p,q\equiv1\pmod4\)。写 \(\pi=r+is\)、\(\rho=u+iv\)，并记 \(R+iS=\pi^2\)、\(U+iV=\rho^2\)。由第~\ref{sec:common-hypotenuse} 节，\(R,U\) 为奇数，\(S,V\) 为非零偶数，且
+
+\[
+R^2+S^2=p^2,\qquad U^2+V^2=q^2,\qquad \gcd(R,S)=\gcd(U,V)=1,\qquad q\nmid UV.
+\]
+
+\(r-s,r+s\) 均为奇数，其公因子整除 \(2r,2s\)，故也整除 \(r,s\)。由 \(\gcd(r,s)=1\)，两者互素。引理~\ref{lem:candidates} 在 \(k=1\) 时给出四个候选，记为
+
+\[
+A=qS,\qquad B=pV,\qquad D=SU+RV,\qquad E=SU-RV.
+\]
+
+交换 \(p,q\) 及相应高斯因子会交换 \(A,B\)，保持 \(D\)，并将 \(E\) 变成 \(-E\)。因此只需排除包含 \(A,B\) 的三元组，以及 \(A,D,E\)。该共同斜边框架也见文献 \cite{ref2} 第 4 节。
+
+\textbf{同时含 \(A,B\)。} 第三个值为 \(H=D\) 或 \(E\)。将 \(A,B,H\) 分别视为第~\ref{sec:gaussian-comparison} 节的 \(A_1,C,B_1^\sigma\)。正向比较取 \(n=2\)，给出 \(p^2<q\)。反向比较中 \(\delta=1\)，给出 \(q^2<p\)。二者矛盾。
+
+\textbf{一个单素因子方向与两个混合方向。} 若 \(A^2=D^2+E^2\)，展开并用 \(q^2=U^2+V^2\)，得到
+
+\[
+S^2(V^2-U^2)=2R^2V^2.
+\]
+
+\(V^2-U^2\) 与 \(R\) 均为奇数。对非零整数 \(n\)，记 \(v_2(n)\) 为使 \(2^j\mid n\) 的最大整数 \(j\ge0\)。由于 \(S,V\) 非零，左、右两侧的这一指数分别为 \(2v_2(S)\) 和 \(1+2v_2(V)\)。两者的奇偶性不同，不能相等。
+
+若 \(D\) 或 \(E\) 担任斜边，则 \(D^2-E^2=\pm A^2\)。由展开式 \(D^2-E^2=4RSUV\) 和 \(S\ne0\) 得
+
+\[
+q^2S=\pm4RUV.
+\]
+
+由 \(q\nmid4UV\) 得 \(q^2\mid R\)。写 \(R=q^2h\)，则 \(S=\pm4UVh\)，由 \(\gcd(R,S)=1\) 得 \(|h|=1\)。因此 \(|(r-s)(r+s)|=q^2\)。两因子互素，且 \(q\) 为素数，所以其绝对值一个为 \(1\)，另一个为 \(q^2\)。由此得到
+
+\[
+|S|=\frac{|(r+s)^2-(r-s)^2|}{2}=\frac{q^4-1}{2}.
+\]
+
+另一方面，\(2|UV|\le U^2+V^2=q^2\)，故 \(|S|=4|UV|\le2q^2\)。这与 \(q\ge5\) 时 \(q^4-1>4q^2\) 矛盾。至此，体对角线为 \(pq\) 的本原情形也已排除。
+
+\section{体对角线为 \texorpdfstring{\(p^2q\)}{p²q} 的本原情形}
+\label{sec:p2q}
+
+\begin{proposition}\label{prop:p2q}
+设 \(p,q\) 为不同素数。不存在体对角线为 \(p^2q\) 的本原完美长方体。
+\end{proposition}
+
+\begin{proof}
+反设存在本原完美长方体，体对角线为 \(g=p^2q\)。由引理~\ref{lem:common-hypotenuse}，\(p,q\equiv1\pmod4\)。沿用第~\ref{sec:common-hypotenuse} 节的 \(\pi,\rho\)，写
+
+\[
+R+iS=\pi^2,\quad T+iW=\pi^4,\quad U+iV=\rho^2,\quad \rho=m+in.
+\]
+
+\[
+\begin{gathered}
+T=R^2-S^2,\quad W=2RS,\quad U=m^2-n^2,\quad V=2mn,\\
+R^2+S^2=p^2,\quad T^2+W^2=p^4,\quad U^2+V^2=q^2.
+\end{gathered}
+\]
+
+由第~\ref{sec:common-hypotenuse} 节，所有分量均非零，\(R,T,U\) 为奇数，\(S,W,V\) 为偶数。\(p\nmid RSTW\) 且 \(q\nmid UV\)，并有 \(\gcd(R,S)=\gcd(T,W)=\gcd(U,V)=\gcd(m,n)=1\)。由 \(T=R^2-S^2\) 还得 \(\gcd(R,T)=1\)。
+
+\subsection{七个偶直角边代表}
+将引理~\ref{lem:candidates} 在 \(k=2\) 时的表达式依次记为 \(A,B,C,D,E,F,G\)。表~\ref{tab:p2q} 中的 \((j,t)\) 指引理~\ref{lem:candidates} 的两个高斯指数偏移。
+
+\begin{table}[htbp]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}cccc@{}}
+\toprule
+代表 & \((j,t)\) & 带符号的偶直角边 & 被 \(p\) 整除 \\
+\midrule
+\(A\) & \((1,0)\) & \(pqS\) & 是 \\
+\(B\) & \((2,0)\) & \(qW\) & 否 \\
+\(C\) & \((0,1)\) & \(p^2V\) & 是 \\
+\(D\) & \((1,1)\) & \(p(SU+RV)\) & 是 \\
+\(E\) & \((1,-1)\) & \(p(SU-RV)\) & 是 \\
+\(F\) & \((2,1)\) & \(WU+TV\) & 否 \\
+\(G\) & \((2,-1)\) & \(WU-TV\) & 否 \\
+\bottomrule
+\end{tabular}
+\caption{\(g=p^2q\) 时的七个带符号偶直角边代表。}\label{tab:p2q}
+\end{table}
+引理~\ref{lem:candidates} 表明，三个互异标签中至少两个属于 \(\{B,F,G\}\)。因此只需考虑包含 \(B\) 和一个混合标签的三元组，以及包含 \(F,G\) 的三元组。
+
+\subsection{包含 \texorpdfstring{\(B\)}{B} 与一个混合代表的三元组}
+设三标签为 \(B,H,L\)，其中 \(H\in\{F,G\}\)，\(L\in\{A,C,D,E\}\)。若 \(L=A\)，则 \(q\mid A,B\) 而 \(q\nmid H\)，勾股等式模 \(q\) 只含一个非零项，矛盾。余下 \(L\in\{C,D,E\}\) 对应第~\ref{sec:gaussian-comparison} 节的 \(j=0,1\)。将 \(B,H\) 视为 \(A_2,B_2^\sigma\)，正向比较取 \(n=2\)，得 \(p^2<q\)。反向比较给出 \(q^2<p^\delta\le p^3\)，因为 \(1\le\delta\le3\)。这与 \(p^2<q\) 矛盾。
+
+\subsection{包含 \texorpdfstring{\(F,G\)}{F,G} 的三元组}
+余下的三标签为 \(F,G,L\)，其中 \(L\in\{A,B,C,D,E\}\)。使用恒等式
+\[
+F^2-G^2=4WTUV,\qquad F^2+G^2=2W^2U^2+2T^2V^2 .
+\]
+
+若 \(|L|\) 是直角边，则有 \(F^2-G^2=\pm L^2\)。分五个标签处理。
+
+\begin{itemize}
+\item \textbf{\(L=A\)。} 代入 \(W=2RS\) 后消去非零 \(S\)，得到 \(8RTUV=\pm p^2q^2S\)。因 \(p\nmid 8RT\) 与 \(q\nmid8UV\)，有 \(p^2\mid UV\)、\(q^2\mid RT\)。由 \(\gcd(U,V)=\gcd(R,T)=1\)，每个素数幂必须整除相应乘积中的一个因子。于是 \(p^2<q\)，并由 \(0<|R|<p\)、\(0<|T|<p^2\) 得 \(q^2<p^2\)，矛盾。
+
+\item \textbf{\(L=B\)。} 消去非零 \(W\)，得到 \(q^2W=\pm4TUV\)。因 \(q\nmid4UV\)，可写 \(T=q^2h\)、\(W=\pm4UVh\)，其中 \(\gcd(T,W)=1\) 迫使 \(|h|=1\)。于是 \(|R-S|\,|R+S|=q^2\)。这两个因子为奇数且互素，因为任一奇公因子整除 \(2R,2S\)，并有 \(\gcd(R,S)=1\)。故其绝对值分别为 \(1,q^2\)，依次可能互换。利用 \((R+S)^2-(R-S)^2=4RS=2W\)，得到 \(|W|=(q^4-1)/2\)。但 \(|W|=4|UV|\le2(U^2+V^2)=2q^2\)，而 \(q\ge5\)，矛盾。
+
+\item \textbf{\(L=C\)。} 消去非零 \(V\)，得 \(p^4V=\pm4WTU\)。因 \(p\nmid4WT\)，可写 \(U=p^4h\)、\(V=\pm4WTh\)。由 \(\gcd(U,V)=1\) 得 \(|h|=1\)，所以 \(|m-n|\,|m+n|=p^4\)。奇性与 \(\gcd(m,n)=1\) 表明两因子互素，其绝对值为 \(1,p^4\)。由 \((m+n)^2-(m-n)^2=2V\)，得 \(|V|=(p^8-1)/2\)，与 \(|V|=4|WT|\le2p^4\) 矛盾。
+
+\item \textbf{\(L=D\) 或 \(E\)。} 等式为 \(p^2(SU\pm RV)^2=\pm4WTUV\)。令 \(\alpha=v_2(S)\)、\(\beta=v_2(V)\)。右边非零，赋值为 \(3+\alpha+\beta\)，因为 \(W=2RS\) 且 \(R,T,U\) 为奇数。若 \(\alpha\ne\beta\)，左边赋值为 \(2\min(\alpha,\beta)\)，严格小于右边。若 \(\alpha=\beta\)，右边赋值为奇数，左边为非零平方的赋值，必为偶数。
+
+\end{itemize}
+
+若 \(|L|\) 是斜边，则有 \(F^2+G^2=L^2\)。对于 \(L=A\) 或 \(B\)，用 \(U^2+V^2=q^2\) 消去 \(U^2\)，得到
+\[
+2(T^2-W^2)V^2=q^2
+\begin{cases}
+S^2(p^2-8R^2), & L=A,\\
+-W^2, & L=B .
+\end{cases}
+\]
+左边非零，且 \(T^2-W^2\) 为奇数，所以其 \(2\)-进赋值为奇数。右边两式均为奇数与非零平方的乘积，赋值为偶数。对于 \(L=C\)，等式化为 \(2W^2U^2=(p^4-2T^2)V^2\)，同样一侧赋值为奇数，另一侧赋值为偶数。
+
+最后，若 \(L=D\) 或 \(E\)，等式为
+\[
+2\bigl((WU)^2+(TV)^2\bigr)=p^2(SU\pm RV)^2 .
+\]
+若 \(v_2(W)\ne v_2(V)\)，左边赋值为 \(1+2\min(v_2(W),v_2(V))\)，为奇数。右边是非零平方，赋值为偶数。若两者相等，记 \(v_2(S)=\alpha\)。此时 \(v_2(W)=v_2(V)=\alpha+1\)。提出共同的 \(2^{2\alpha+2}\) 后，括号内余下两个奇数平方之和，模 \(4\) 为 \(2\)，故左边赋值为 \(2\alpha+4\)。右边括号内两项赋值分别为 \(\alpha,\alpha+1\)，故右边赋值为 \(2\alpha\)，仍矛盾。
+
+两类三元组覆盖所有可能的标签。故本原情形得证。
+\end{proof}
+
+\section{体对角线为 \texorpdfstring{\(p^3q\)}{p³q} 的本原情形}
+\label{sec:p3q}
+
+\begin{proposition}\label{prop:p3q}
+设 \(p,q\) 为不同素数。不存在体对角线为 \(p^3q\) 的本原完美长方体。
+\end{proposition}
+
+\begin{proof}
+反设存在本原完美长方体，体对角线为 \(g=p^3q\)。继续使用第~\ref{sec:p2q} 节的 \(R,S,T,W,U,V\)，并置 \(X+iY=\pi^6\)。有
+
+\[
+X=R(R^2-3S^2),\qquad Y=S(3R^2-S^2),\qquad X^2+Y^2=p^6.
+\]
+
+\(X\) 为奇数，\(Y\) 为 \(4\) 的倍数，二者非零且互素，且 \(p\nmid XY\)。引理~\ref{lem:candidates} 在 \(k=3\) 时给出十个带符号的候选
+
+\[
+A_j=p^{3-j}qI_j,\qquad B_j^\sigma=p^{3-j}(I_jU+\sigma R_jV),\qquad C=p^3V,
+\quad j=1,2,3,\quad \sigma\in\{1,-1\}.
+\]
+
+其中 \(I_1=S,I_2=W,I_3=Y\)。三个互异标签中至少两个来自 \(\{A_3,B_3^+,B_3^-\}\)。
+
+\subsection{含 \texorpdfstring{\(A_3\)}{A₃} 和一个 \texorpdfstring{\(B_3^\sigma\)}{B₃(σ)} 的情形}
+设 \(H=B_3^\sigma\)，第三值为 \(L\)。若 \(L\) 是另一个 \(B_3\)，下节一并处理。若 \(L=A_1\) 或 \(A_2\)，则 \(A_3,L\) 都被 \(q\) 整除，而 \(q\nmid H\)，在模 \(q\) 下矛盾。其余为 \(L=B_j^\tau\)（\(j=1,2\)）或 \(L=C\)（\(j=0\)）。
+
+用第~\ref{sec:gaussian-comparison} 节的正向比较取 \(n=2(3-j)\)，得 \(p^{2(3-j)}<q\)。反向比较给出 \(q^2<p^\delta\)，其中 \(\delta\le3+j\)。若 \(j=0,1\)，这意味着 \(p^4<q\) 且 \(q^2<p^4\)，矛盾。若 \(j=2\)，则 \(p^2<q\)，并且 \(\delta\in\{1,5\}\)。因 \(q^2>p^4\)，必须有 \(\delta=5\) 且 \(\tau=-\sigma\)。
+
+若 \(A_3\) 为直角边，第~\ref{sec:gaussian-comparison} 节的加强界给出 \(q^4<p^5\)。但 \(p^2<q\) 蕴含 \(p^8<q^4\)，矛盾。
+
+若 \(A_3\) 为斜边，第~\ref{sec:gaussian-comparison} 节的反向比较给出 \(q^2\mid\operatorname{Re}(\pi^{10})\)，因为取共轭不改变实部。展开得
+
+\[
+\operatorname{Re}(\pi^{10})=R E,\qquad E=R^4-10R^2S^2+5S^4.
+\]
+
+\(|R|<p<q\) 且 \(R\ne0\)，所以 \(q^2\mid E\)。由
+
+\[
+E+5(R^2+S^2)^2=6R^4+10S^4>0,\qquad
+5(R^2+S^2)^2-E=4R^4+20R^2S^2>0
+\]
+
+得 \(|E|<5p^4<5q^2\)。又因 \(R,q\) 为奇数且 \(4\mid S\)，有 \(E\equiv q^2\equiv1\pmod8\)。故整数 \(E/q^2\) 落在 \((-5,5)\) 内且模 \(8\) 为 \(1\)，从而 \(E=q^2\)。模 \(3\) 时，\(R^2+S^2=p^2\equiv1\) 表明 \(R,S\) 恰有一个被 \(3\) 整除。若 \(3\mid R\)，则 \(E\equiv5S^4\equiv2\pmod3\)，与 \(E=q^2\) 矛盾。因此 \(3\mid S\) 且 \(3\nmid R\)。
+
+令 \(r=v_3(S)\ge1\) 与 \(s=v_3(V)\)。从 \(Y=S(3R^2-S^2)\) 和 \(W=2RS\) 得 \(v_3(Y)=r+1\)、\(v_3(W)=r\)。其中 \((3R^2-S^2)/3=R^2-3(S/3)^2\) 是模 \(3\) 单位。\(X=R(R^2-3S^2)\) 和 \(T=R^2-S^2\) 也都是模 \(3\) 单位。现在需要的等式是
+
+\begin{equation}\label{eq:p3q-hypotenuse}
+(YU+\sigma XV)^2+p^2(WU-\sigma TV)^2=q^2Y^2.
+\end{equation}
+
+若 \(s\le r\)，两直角边均被 \(3^s\) 整除，而第一条除以 \(3^s\) 后非零模 \(3\)。斜边除以 \(3^s\) 后仍被 \(3\) 整除。式 \eqref{eq:p3q-hypotenuse} 除以 \(3^{2s}\) 后模 \(3\) 给出两平方和为零，故两项都为零，矛盾。若 \(s>r\)，则 \(3\mid V\)，由 \(U^2+V^2=q^2\) 知 \(3\nmid U\)。此时第二条直角边的赋值恰为 \(r\)，第一条及斜边都被 \(3^{r+1}\) 整除。式 \eqref{eq:p3q-hypotenuse} 除以 \(3^{2r}\) 后模 \(3\) 再次矛盾。
+
+\subsection{含 \texorpdfstring{\(B_3^+\)}{B₃⁺} 和 \texorpdfstring{\(B_3^-\)}{B₃⁻} 的情形}
+令 \(F=B_3^+=YU+XV\) 与 \(G=B_3^-=YU-XV\)。直接计算得到
+
+\begin{equation}\label{eq:p3q-pair}
+F^2-G^2=4XYUV,\qquad F^2+G^2=2(Y^2U^2+X^2V^2).
+\end{equation}
+
+以 \(L\) 表示第三值。作为直角边时它必须满足 \(L^2=\pm(F^2-G^2)\)，作为斜边时必须满足 \(L^2=F^2+G^2\)。
+
+\textbf{若 \(L=A_j\) 且 \(j=1,2\)。} 若为直角边，式 \eqref{eq:p3q-pair} 与 \(pq\mid L\) 给出 \(p^2\mid UV\) 及 \(q^2\mid XY\)，这里分别消去了模 \(p\) 单位 \(4XY\) 和模 \(q\) 单位 \(4UV\)。由 \(\gcd(U,V)=\gcd(X,Y)=1\)，每个素数平方都必须整除对应乘积的一个因子。由范数得 \(p^2<q\) 和 \(q^2<p^3\)，矛盾。
+
+若为斜边，将右端的 \(2(Y^2U^2+X^2V^2)\) 先改写为 \(2Y^2(U^2-V^2)+2p^6V^2\)，再改写为 \(2V^2(X^2-Y^2)+2q^2Y^2\)。模 \(p^2\) 与 \(q^2\) 分别给出
+
+\[
+p^2\mid(U-V)(U+V),\qquad q^2\mid(X-Y)(X+Y).
+\]
+
+每对和差均为互素非零奇数。事实上，它们的公因子为奇数，且须整除原来两个分量的两倍。故每个素数平方都整除对应的一项。利用
+
+\[
+(U-V)^2+(U+V)^2=2q^2,\qquad
+(X-Y)^2+(X+Y)^2=2p^6
+\]
+
+得到 \(p^4\le2q^2\) 与 \(q^4\le2p^6\)，从而 \(p^8\le8p^6\)，与 \(p\ge5\) 矛盾。
+
+\textbf{若 \(L=A_3\) 或 \(C\)。} 若 \(A_3\) 为直角边，消去 \(Y\ne0\) 得 \(q^2Y=\pm4XUV\)。由 \(q\nmid4UV\)，写 \(X=q^2 k\)，继而 \(Y=\pm4kUV\)。因 \(\gcd(X,Y)=1\)，有 \(|k|=1\)，所以 \(|X|=q^2\) 且 \(|Y|=4|UV|\le2q^2\)。另一方面，设 \(\pi^3=M+iN\)，则 \(X=(M-N)(M+N)\) 和 \(Y=2MN\)。由第~\ref{sec:common-hypotenuse} 节，\(M,N\) 一奇一偶且互素。因此 \(M-N,M+N\) 均为奇数，任何公因子都整除 \(2M,2N\)，故它们互素。它们的绝对值只能是 \(1\) 与 \(q^2\)。由 \(2Y=(M+N)^2-(M-N)^2\) 得 \(2|Y|=q^4-1>4q^2\)，矛盾。
+
+若 \(C\) 为直角边，消去 \(V\ne0\) 得 \(p^6V=\pm4XYU\)。同理，由 \(p\nmid4XY\) 和 \(\gcd(U,V)=1\)，得到 \(|U|=p^6\) 且 \(|V|=4|XY|\le2p^6\)。在 \(U+iV=\rho^2\) 中，\(U=(\operatorname{Re}\rho-\operatorname{Im}\rho)(\operatorname{Re}\rho+\operatorname{Im}\rho)\)。两因子互素，理由同 \(M-N,M+N\)，故它们的绝对值为 \(1,p^6\)，推出 \(2|V|=p^{12}-1>4p^6\)，矛盾。两处严格不等式都来自 \(m^2-1>4m\) 对 \(m\ge5\) 成立。
+
+若 \(A_3\) 为斜边，将式 \eqref{eq:p3q-pair} 的和式与 \(U^2+V^2=q^2\) 合并得到 \(2(X^2-Y^2)V^2=-q^2Y^2\)。若 \(C\) 为斜边，式 \eqref{eq:p3q-pair} 给出 \(2U^2Y^2=(p^6-2X^2)V^2\)。两等式的各平方因子均非零，\(X^2-Y^2\)、\(-q^2\)、\(U^2\) 与 \(p^6-2X^2\) 均为奇数。左侧的 \(2\)-进赋值为奇数，右侧为偶数，故两式均不成立。
+
+\textbf{若 \(L=B_2^\tau\)。} 令 \(D=3R^2-S^2\)。\(D\) 为奇数，且 \(Y=DS\)。有
+
+\[
+L=p(2\alpha S+\beta V),\qquad \alpha=RU,\qquad \beta=\tau T.
+\]
+
+若 \(L\) 为直角边，式 \eqref{eq:p3q-pair} 要求
+
+\[
+p^2(2\alpha S+\beta V)^2=4d_0SV,\qquad d_0=\pm XDU.
+\]
+
+这里 \(p,\alpha,\beta,d_0\) 都是奇数。模 \(2\) 先得 \(V\) 为偶数。写 \(V=2v\)，除以 \(4\) 后得 \(p^2(\alpha S+\beta v)^2=2d_0Sv\)。若 \(S\) 为奇数，模 \(2\) 迫使 \(v\) 为奇数，随即右端模 \(4\) 为 \(2\)，不可能是平方。故 \(S,V\) 均为偶数。保持系数固定，用 \((S/2,V/2)\) 替代 \((S,V)\)，齐次二次等式仍成立。重复得到 \(S\) 被任意次幂的 \(2\) 整除，与 \(S\ne0\) 矛盾。
+
+若 \(L\) 为斜边，所需等式为
+
+\[
+p^2(2\alpha S+\beta V)^2=2\bigl((DUS)^2+(XV)^2\bigr).
+\]
+
+模 \(2\) 仍知 \(V\) 为偶数。此时左端模 \(4\) 为零，若 \(S\) 为奇数，则右端模 \(4\) 为 \(2\)。因此 \(S,V\) 均为偶数，固定系数作同样的齐次下降即得矛盾。
+
+\textbf{若 \(L=B_1^\tau\)。} 用 \(\tau V\) 代替 \(V\) 即可取 \(\tau=1\)。这样只会改变差式右端的符号，且两个符号都在考虑之内。记
+
+\[
+P=(R^2+S^2)^2=p^4,\qquad K=3T^2-W^2,\qquad XY=RSK.
+\]
+
+对满足 \(Av^2+Buv+Cu^2=0\) 的整数 \(u\ne0,v\)，恒有
+
+\begin{equation}\label{eq:quadratic}
+(2Av+Bu)^2=(B^2-4AC)u^2.
+\end{equation}
+
+因此判别式为有理数的平方。若整数是有理数的平方，将平方根写成既约分数即可知它是整数的平方。判别式除以一个非零整数平方后若仍为整数，该商同样必须是整数的平方。
+
+若 \(L\) 为直角边，等式写作
+
+\[
+P(SU+RV)^2=\eta\,4XYUV,\qquad \eta\in\{1,-1\}.
+\]
+
+在式 \eqref{eq:quadratic} 中取 \(u=U,v=V\)，三个系数分别为 \(PR^2\)、\(2PRS-4\eta XY\) 与 \(PS^2\)。代入 \(XY=RSK\) 后，判别式为 \((4RS)^2K(K-\eta P)\)。\(RS\ne0\)，故 \(K(K-\eta P)\) 必为平方。因为 \(T\) 为奇数、\(4\mid W\)，且 \(p\) 为奇数，\(K\equiv3\pmod8\) 和 \(P\equiv1\pmod8\)。若 \(\eta=1\)，所得乘积模 \(8\) 为 \(6\)，矛盾。若 \(\eta=-1\)，由 \(P=T^2+W^2\) 得 \(K+P=4T^2\)。因 \(T\) 为非零奇数，\(K\) 必为整数平方。写 \(K=k^2\)，则 \(k^2+W^2=3T^2\)。模 \(3\) 得 \(3\mid k,W\)，进而 \(9\mid3T^2\) 及 \(3\mid T\)。这与 \(T^2+W^2=p^4\) 矛盾。
+
+若 \(L\) 为斜边，所需等式为
+
+\[
+P(SU+RV)^2=2(Y^2U^2+X^2V^2).
+\]
+
+这次在式 \eqref{eq:quadratic} 中的三个系数为 \(PR^2-2X^2\)、\(2PRS\) 与 \(PS^2-2Y^2\)。代入 \(X,Y,T\) 的表达式并展开，判别式为
+
+\[
+(8RST)^2\bigl(14R^2S^2-R^4-S^4\bigr).
+\]
+
+因 \(R,S,T\) 均非零，括号内必须是整数平方。然而 \(R\) 为奇数且 \(4\mid S\)，故该整数模 \(8\) 为 \(7\)，矛盾。
+
+上述情形覆盖了每个含至少两个顶层标签的互异三元组，因此体对角线为 \(p^3q\) 的本原完美长方体不存在。
+\end{proof}
+
+\section{从本原情形到一般情形}
+\label{sec:general}
+
+\begin{proof}[\proofof]
+设 \(s=\gcd(a,b,c)\)。每条面对角线及体对角线的平方均被 \(s^2\) 整除。逐个素因子比较赋值即可知，每条对角线均被 \(s\) 整除。因此七条长度同时除以 \(s\)，仍得到完美长方体，且三个棱长的最大公因子为 \(1\)。记其体对角线为 \(g'=g/s\)。因为三条棱均为正整数，\((g')^2\ge3\)，所以 \(g'>1\)。
+
+若原体对角线为 \(g=p^kq\)，其中 \(k\in\{2,3\}\)，则 \(g'\mid p^kq\)。因此 \(g'\) 只能是素数幂或 \(p^jq\)（\(1\le j\le k\)）。第~\ref{sec:lower-diagonals} 节排除素数幂及 \(pq\)，命题~\ref{prop:p2q} 和~\ref{prop:p3q} 分别排除 \(p^2q\) 和 \(p^3q\) 的本原情形。所有可能均已涵盖，定理~\ref{thm:main} 得证。
+\end{proof}
+
+对 \(p^2q\)，此结论覆盖文献 \cite{ref2} 的 57 个轨道所对应的完美长方体情形，包括其留下的 22 个轨道。这里的排除使用了完美长方体条件，特别是本原规约及引理~\ref{lem:common-hypotenuse}。若考虑脱离这些条件的单个代数关系，需要另外分析其解集。
+
+\section{Lean 形式化与复现}
+\label{sec:lean}
+
+Korec 的两条低指数排除已有独立的 Lean 形式化 \cite{ref5}。本稿随附的工程使用 Lean 4.34.1 \cite{ref6} 和 Mathlib 4.34.1 \cite{ref7}。工程在 \texttt{CuboidBasic.\allowbreak{}lean} 以正整数长度和四个平方等式定义完美长方体。最终定理位于 \texttt{CuboidTheorems.\allowbreak{}lean}，名称为 \texttt{CuboidFormal.\allowbreak{}forbidden\_\allowbreak{}p2q} 和 \texttt{CuboidFormal.\allowbreak{}forbidden\_\allowbreak{}p3q}。展开定义后，对应陈述均对任意不同的自然数素数 \(p,q\) 以及任意满足长度条件的完美长方体量化，证明其 \(g\) 不等于相应的乘积。最终陈述没有本原性假设。
+
+\texttt{GaussianRepr.\allowbreak{}lean} 和 \texttt{GaussianPhase.\allowbreak{}lean} 验证共斜边候选与高斯整除比较。\texttt{P2Proof.\allowbreak{}lean} 和 \texttt{P3Proof.\allowbreak{}lean} 将这些条件与两个本原排除相接。\texttt{LowerDiagonal.\allowbreak{}lean} 重证低指数排除，\texttt{PrimitiveReduction.\allowbreak{}lean} 验证约分规约。随稿源码包 \texttt{Perfect\_\allowbreak{}Cuboid\_\allowbreak{}Lean\_\allowbreak{}Full\_\allowbreak{}Verification.\allowbreak{}zip} 包含工具链版本说明、依赖清单、证明源码和核验日志。
+
+在该工程根目录执行以下命令可复现构建、陈述检查和内核重放。
+
+\begin{verbatim}
+lake build CuboidProof
+lake env lean CuboidAudit.lean
+lake env leanchecker --fresh --verbose CuboidTheorems
+\end{verbatim}
+\texttt{CuboidAudit.\allowbreak{}lean} 对两条最终定理分别输出 \texttt{\#print axioms} 的结果。两者的依赖列表均为 \texttt{propext}、\texttt{Classical.\allowbreak{}choice}、\texttt{Quot.\allowbreak{}sound}。\texttt{leanchecker --fresh} 在空环境中重放目标模块及其导入项，本次重放成功完成。对应记录分别保存在 \texttt{lean-build.\allowbreak{}log}、\texttt{lean-audit.\allowbreak{}log} 和 \texttt{lean-replay.\allowbreak{}log}。
+
+\section*{致谢}
+感谢 Ivan Korec 对完美长方体体对角线的开创性约束。他的素因子限制、共斜边判据及低指数排除为本文提供了出发点。感谢 Aletheia、Neo.K 和懸衡公开共斜边规约、七候选分类、轨道排除和复核记录。那些公开推导使已有成果及待解分支能够逐项核对。感谢 ProofAtlas 保存先行主张及其核查问题，也感谢 yachi 及相关贡献者公开 Korec 定理的 Lean 复现，并感谢 Lean 与 Mathlib 社区建设形式化所用的工具和数学库。本文的数学探索、Lean 证明开发与稿件整理使用了 OpenAI Codex 辅助。
+
+
+\begin{thebibliography}{9}
+\bibitem{ref1} Ivan Korec. \emph{Lower bounds for perfect rational cuboids}. Mathematica Slovaca, \textbf{42}(5), 565–582, 1992. 引理 2.1，定理 5.1. \href{https://dml.cz/handle/10338.dmlcz/132903}{DML-CZ 数字档案}.
+
+\bibitem{ref2} Aletheia, Neo.K, and 懸衡（Xuán Héng）. \emph{Which body diagonals a perfect cuboid can have: prime powers, products of two primes, and the 22 open orbits of \(p^2q\)}. AMRAL 预印本，版本 0.1，2026 年 11 月 8 日. \href{https://amral.evemisslab.com/en/perfect-cuboid/papers/body-diagonal-factorization/}{预印本与附件}.
+
+\bibitem{ref3} AMRAL. \emph{Phase 1G-B — Proof-Safe Quotient of the \(g=p^2q\) Seven-State System}. 公开研究稿，第 6–7 节. \href{https://amral.evemisslab.com/en/perfect-cuboid/files/phase1g_b_p2q_four_class_reduction.md}{研究稿全文}.
+
+\bibitem{ref4} ProofAtlas. \emph{Perfect Cuboid Problem}. Collaboration beta 公开研究记录，页面标注来源记录于 2026 年 8 月 13 日，访问于 2026 年 11 月 21 日. \href{https://www.proofatlas.ai/collaboration/perfect-cuboid-problem/}{公开记录}.
+
+\bibitem{ref5} yachi. \emph{Korec's theorem: the space diagonal of a perfect cuboid is neither a prime power nor a product of two primes}. \texttt{lean-playground}，PR \#18，2026 年 10 月 27 日合并. \href{https://github.com/yachi/lean-playground/pull/18}{源码合并记录}.
+
+\bibitem{ref6} Leonardo de Moura and Sebastian Ullrich. \emph{The Lean 4 Theorem Prover and Programming Language}. In André Platzer and Geoff Sutcliffe, eds., Automated Deduction – CADE 28, LNCS 12699, Springer, 625–635, 2021. \href{https://doi.org/10.1007/978-3-030-79876-5_37}{doi:10.1007/978-3-030-79876-5\_37}. \href{https://github.com/leanprover/lean4/releases/tag/v4.34.1}{Lean v4.34.1}.
+
+\bibitem{ref7} The mathlib Community. \emph{The Lean Mathematical Library}. In Proceedings of the 9th ACM SIGPLAN International Conference on Certified Programs and Proofs (CPP 2020), ACM, 367–381, 2020. \href{https://doi.org/10.1145/3372885.3373824}{doi:10.1145/3372885.3373824}. \href{https://github.com/leanprover-community/mathlib4/releases/tag/v4.34.1}{Mathlib v4.34.1}.
+\end{thebibliography}
+\end{document}

@@ -1,0 +1,16 @@
+== verify_arithmetic.py ==
+k=2: 7 index states, 105 state/role cases, 39 after the minimal-p-valuation reduction
+k=3: 10 index states, 360 state/role cases, 66 after the minimal-p-valuation reduction
+PASS Gaussian polynomial identities: 61
+PASS Sum, difference, and cancellation identities: 17
+PASS p^3*q discriminant identities: 12
+PASS Exhaustive finite residue conditions: 89
+PASS Affine valuation comparisons: 8
+PASS Prime-size contradictions and phase gaps: 8
+PASS Exhaustive Gaussian index and proof-route census: 8
+PASS 203 checks. Scope: identities, residues, route coverage.
+The complete cuboid theorems are not kernel-checked by this program.
+== verify_b2_residues.py ==
+B2 difference: all 786432 admissible residue tuples rejected.
+B2 sum: all 1536 admissible residue tuples rejected.
+Two polynomial homogeneity identities hold coefficient by coefficient.

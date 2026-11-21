@@ -1,0 +1,17 @@
+name = "perfectCuboidVerification"
+defaultTargets = ["CuboidProof"]
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4.git"
+rev = "v4.34.1"
+
+[[lean_lib]]
+name = "CuboidProof"
+roots = [
+  "CuboidBasic", "PrimitiveReduction", "GaussianRepr", "GaussianPhase",
+  "P2Core", "P2Data", "P2Phase", "P2Proof",
+  "P3Core", "P3Parity", "P3Dispatch", "P3Data", "P3PairBridge", "P3MixedBridge", "P3Proof",
+  "CuboidGaussian", "CuboidCandidates", "CuboidP2Candidates", "LowerDiagonal", "CuboidTheorems",
+]
+
